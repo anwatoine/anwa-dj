@@ -9,13 +9,10 @@
   :root {
     --green: #1DB954;
     --green-dim: rgba(29,185,84,0.12);
-    --bg: #0a0a0a;
-    --bg2: #111111;
-    --bg3: #1a1a1a;
+    --bg: #0a0a0a; --bg2: #111111; --bg3: #1a1a1a;
     --border: rgba(255,255,255,0.07);
     --border-hover: rgba(29,185,84,0.4);
-    --text: #f0f0f0;
-    --muted: #888;
+    --text: #f0f0f0; --muted: #888;
     --s-color: #3b82f6; --s-bg: rgba(59,130,246,0.12);
     --b-color: #f59e0b; --b-bg: rgba(245,158,11,0.12);
     --k-color: #a78bfa; --k-bg: rgba(167,139,250,0.12);
@@ -40,17 +37,16 @@
   .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; }
   .btn-green {
     display: flex; align-items: center; justify-content: center; gap: 10px;
-    width: 100%; padding: 16px; background: var(--green); color: #000;
+    width: 100%; padding: 14px; background: var(--green); color: #000;
     font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600;
-    border: none; border-radius: 50px; cursor: pointer; transition: all .2s; letter-spacing: .02em;
+    border: none; border-radius: 50px; cursor: pointer; transition: all .2s;
   }
   .btn-green:hover { background: #22d464; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(29,185,84,0.3); }
-  .btn-green:active { transform: scale(.98); }
   .btn-green:disabled { opacity: .4; cursor: not-allowed; transform: none; box-shadow: none; }
   .btn-green svg { width: 20px; height: 20px; fill: #000; flex-shrink: 0; }
   .config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; }
-  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; letter-spacing: .04em; }
-  input[type="text"], input[type="number"], select {
+  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  input[type="text"], input[type="number"], input[type="password"], select {
     width: 100%; padding: 10px 14px; background: var(--bg3); border: 1px solid var(--border);
     border-radius: 10px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none; transition: border-color .2s;
   }
@@ -66,8 +62,8 @@
   #progress-section { display: none; }
   .progress-wrap { background: var(--bg3); border-radius: 50px; height: 6px; overflow: hidden; margin: 1rem 0; }
   .progress-bar { height: 100%; background: var(--green); border-radius: 50px; width: 0%; transition: width .3s ease; }
-  #progress-log { font-size: 13px; font-family: 'Space Mono', monospace; max-height: 200px; overflow-y: auto; }
-  .log-line { padding: 4px 0; border-bottom: 1px solid var(--border); }
+  #progress-log { font-size: 12px; font-family: 'Space Mono', monospace; max-height: 200px; overflow-y: auto; }
+  .log-line { padding: 3px 0; border-bottom: 1px solid var(--border); }
   .log-line.ok { color: var(--green); }
   .log-line.err { color: #f87171; }
   .log-line.info { color: var(--muted); }
@@ -77,16 +73,13 @@
   .result-card p { color: var(--muted); font-size: 14px; margin-bottom: 1.25rem; }
   .btn-open { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: var(--green); color: #000; font-weight: 600; font-size: 14px; border-radius: 50px; text-decoration: none; }
   #tracks-preview { margin-top: 1rem; }
-  .track-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
-  .track-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 50px; letter-spacing: .06em; flex-shrink: 0; }
+  .track-item { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+  .track-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 50px; flex-shrink: 0; }
   .track-badge.S { background: var(--s-bg); color: var(--s-color); }
   .track-badge.B { background: var(--b-bg); color: var(--b-color); }
   .track-badge.K { background: var(--k-bg); color: var(--k-color); }
   .track-name { font-size: 13px; font-weight: 500; flex: 1; }
   .track-artist { font-size: 12px; color: var(--muted); }
-  .track-status { font-size: 11px; margin-left: auto; flex-shrink: 0; }
-  .track-status.found { color: var(--green); }
-  .track-status.not-found { color: #f87171; }
   #status-bar { display: flex; align-items: center; gap: 8px; }
   .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
   .dot.connected { background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite; }
@@ -94,19 +87,11 @@
   #user-info { display: none; align-items: center; gap: 10px; }
   #user-avatar { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--green); }
   .hidden { display: none !important; }
+  .info-box { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 1rem; }
+  .info-box a { color: var(--green); }
+  .step { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; background: var(--green); color: #000; border-radius: 50%; font-size: 11px; font-weight: 700; margin-right: 6px; flex-shrink: 0; }
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 2px; }
-
-  /* Modale token manuel */
-  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 1rem; }
-  .modal { background: var(--bg2); border: 1px solid var(--border-hover); border-radius: 16px; padding: 2rem; max-width: 520px; width: 100%; }
-  .modal h3 { font-size: 16px; font-weight: 600; margin-bottom: .5rem; }
-  .modal p { font-size: 13px; color: var(--muted); margin-bottom: 1rem; line-height: 1.6; }
-  .modal input { margin-bottom: 1rem; }
-  .modal-btns { display: flex; gap: 10px; }
-  .btn-secondary { flex: 1; padding: 12px; background: var(--bg3); color: var(--text); border: 1px solid var(--border); border-radius: 50px; cursor: pointer; font-size: 14px; }
-  .step-badge { display: inline-block; background: var(--green); color: #000; border-radius: 50%; width: 20px; height: 20px; font-size: 11px; font-weight: 700; text-align: center; line-height: 20px; margin-right: 6px; }
-  code { background: var(--bg3); padding: 2px 6px; border-radius: 4px; font-family: 'Space Mono', monospace; font-size: 12px; color: var(--green); }
 </style>
 </head>
 <body>
@@ -131,18 +116,20 @@
     </div>
   </header>
 
-  <!-- CONNEXION -->
+  <!-- CONNEXION TOKEN MANUEL -->
   <section id="connect-section">
     <div class="section-title">Connexion Spotify</div>
     <div class="card">
-      <p style="font-size:14px;color:var(--muted);margin-bottom:1.25rem;line-height:1.6">
-        <strong style="color:var(--text)">Option 1 — Connexion automatique</strong><br>Clique sur le bouton ci-dessous pour te connecter via Spotify.<br><br><strong style="color:var(--text)">Option 2 — Token manuel (recommandé si erreur 403)</strong><br>Va sur <a href="https://developer.spotify.com/console/post-playlists/" target="_blank" style="color:var(--green)">developer.spotify.com/console/post-playlists</a>, clique <em>Get Token</em>, coche <code>playlist-modify-public</code> et <code>user-read-private</code>, copie le token et colle-le ci-dessous.
-      </p>
-      <div style="margin-bottom:1rem"><input type="text" id="manual-token" placeholder="Colle ici ton token Spotify…" style="margin-bottom:8px"/><button class="btn-green" onclick="useManualToken()" style="background:#1a6b35;margin-bottom:1rem">Utiliser ce token</button></div>
-      <div style="text-align:center;color:var(--muted);font-size:12px;margin-bottom:1rem">— ou connexion automatique —</div>
-      <button class="btn-green" onclick="connectSpotify()">
+      <div class="info-box">
+        <div style="margin-bottom:8px"><span class="step">1</span> Va sur <a href="https://developer.spotify.com/console/post-playlists/" target="_blank">developer.spotify.com/console/post-playlists</a></div>
+        <div style="margin-bottom:8px"><span class="step">2</span> Clique <strong style="color:var(--text)">Try it</strong> → ouvre F12 → onglet <strong style="color:var(--text)">Network</strong> → clique à nouveau <strong style="color:var(--text)">Try it</strong></div>
+        <div style="margin-bottom:8px"><span class="step">3</span> Clique la ligne <strong style="color:var(--text)">playlists (201)</strong> → onglet <strong style="color:var(--text)">Headers</strong> → copie le token après <strong style="color:var(--text)">Authorization: Bearer</strong></div>
+        <div><span class="step">4</span> Colle-le ci-dessous et clique <strong style="color:var(--text)">Se connecter</strong></div>
+      </div>
+      <input type="password" id="manual-token" placeholder="Colle ton token Spotify ici…" style="margin-bottom:12px"/>
+      <button class="btn-green" onclick="useManualToken()">
         <svg viewBox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
-        Se connecter avec Spotify
+        Se connecter
       </button>
     </div>
   </section>
@@ -202,163 +189,71 @@
   </section>
 </div>
 
-<!-- MODALE CODE -->
-<div class="modal-overlay hidden" id="modal">
-  <div class="modal">
-    <h3>🔑 Colle le code Spotify</h3>
-    <p>
-      Après avoir autorisé l'app, Spotify t'a redirigé vers une page d'erreur 404.<br>
-      C'est normal ! Regarde l'URL dans la barre du navigateur, elle ressemble à :<br><br>
-      <code>http://127.0.0.1:5500?code=AQCD...</code><br><br>
-      <span class="step-badge">1</span> Copie tout ce qui suit <code>?code=</code><br>
-      <span class="step-badge">2</span> Colle-le ci-dessous et valide.
-    </p>
-    <input type="text" id="code-input" placeholder="AQCDIw9abzdA54ZuirZ6USdEhKjKtNK..." />
-    <div class="modal-btns">
-      <button class="btn-secondary" onclick="closeModal()">Annuler</button>
-      <button class="btn-green" style="flex:2" onclick="submitCode()">Valider et continuer</button>
-    </div>
-  </div>
-</div>
-
 <script>
-const CLIENT_ID = '8d38f9416611475b9108189802c111f8';
-const REDIRECT_URI = 'https://anwatoine.github.io/anwa-dj/anwa_dj_spotify.html';
-const SCOPES = 'playlist-modify-public playlist-modify-private user-read-private user-read-email ugc-image-upload';
-
-const CATALOGUE = {
-  S: [
-    "La Gozadera Gente de Zona","Vivir Mi Vida Marc Anthony","El Cantante Hector Lavoe",
-    "Lloraras Oscar D Leon","Aguanile Willie Colon","Cali Pachanguero Grupo Niche",
-    "Todo Se Derrumba Marc Anthony","Pa lla Voy Marc Anthony","Que Locura Victor Manuelle",
-    "No Me Doy por Vencido Luis Fonsi","Amor Secreto Marc Anthony","Timbalero Celia Cruz",
-    "La Salsa Nunca Muere Gilberto Santa Rosa","El Preso Fruko","Cuentame Marc Anthony",
-    "Ojos Chinos Tito Puente","Quimbara Celia Cruz","Tu con El Marc Anthony",
-    "Por ella Marc Anthony","Salserin Orquesta de la Luz"
-  ],
-  B: [
-    "Propuesta Indecente Romeo Santos","Por Un Segundo Romeo Santos","Obsesion Aventura",
-    "Un Vuelo a Habana Aventura","Eres Mia Romeo Santos","Heroe Favorito Romeo Santos",
-    "Darte un Beso Prince Royce","El Tonto Prince Royce","El Amante Nicky Jam",
-    "Bachata en Fukuoka Juan Luis Guerra","Inmortal Romeo Santos","Amor de Madre Frank Reyes",
-    "Te Robre Nicky Jam","Ciego de Amor Toby Love","Lento Daddy Yankee",
-    "Ven Bailalo Prince Royce","Solamente Tu Pablo Alboran","Que Se Sepa Frank Reyes",
-    "Me Extranas Prince Royce","Inocente Romeo Santos"
-  ],
-  K: [
-    "Petit Pays Gims","Saudade Djodje","Lento Kaysha","Louca Nelson Freitas",
-    "Te Quero Anselmo Ralph","Madalena C4 Pedro","Tudo Mudou Djodje",
-    "Besame Kaysha","Complicado Nelson Freitas","Tchau Eduardo Paim",
-    "Vazame C4 Pedro","Amor di Mi Vida Anselmo Ralph","Menina Anselmo Ralph",
-    "Hey Baby Kaysha","Ela E Delas Nelson Freitas","Yoyo Kaysha",
-    "Rastinha Elji Beatzkilla","Je t aime encore Gims","Safari Kaysha","Passe Djodje"
-  ]
+// ── IDs des playlists sources ─────────────────────────────────────────────────
+const PLAYLIST_IDS = {
+  S: '6SzueO7QgQjoPicIO9Lkqn',  // SALSA 2026
+  B: '2Ef6Ltu5hNVWmUySmwTUe1',  // BACHATA SENSUAL 2026
+  K: '0O6sDyu0Ft8UCRkoMTmBp2'   // KIZOMBA HITS 2026
 };
 
 let accessToken = null;
 let userId = null;
-let pkceVerifier = null;
+let catalogue = { S: [], B: [], K: [] };
 
+// ── Connexion token manuel ────────────────────────────────────────────────────
 async function useManualToken() {
-  const token = document.getElementById("manual-token").value.trim();
-  if (!token) { alert("Colle un token valide."); return; }
+  const token = document.getElementById('manual-token').value.trim();
+  if (!token) { alert('Colle un token valide.'); return; }
   accessToken = token;
-  sessionStorage.setItem("spotify_token", token);
-  await loadUser();
-}
-
-// ── PKCE ──────────────────────────────────────────────────────────────────────
-function rnd(len) {
-  const a = new Uint8Array(len);
-  crypto.getRandomValues(a);
-  return Array.from(a, b => ('0'+b.toString(16)).slice(-2)).join('');
-}
-async function sha256(str) {
-  return crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-}
-function b64url(buf) {
-  return btoa(String.fromCharCode(...new Uint8Array(buf)))
-    .replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-}
-
-async function connectSpotify() {
-  pkceVerifier = rnd(64);
-  const challenge = b64url(await sha256(pkceVerifier));
-  sessionStorage.setItem('pkce_v', pkceVerifier);
-
-  const url = 'https://accounts.spotify.com/authorize?' + new URLSearchParams({
-    response_type: 'code',
-    client_id: CLIENT_ID,
-    scope: SCOPES,
-    redirect_uri: REDIRECT_URI,
-    code_challenge_method: 'S256',
-    code_challenge: challenge
-  });
-
-  // Ouvre dans un nouvel onglet
-  window.open(url, '_blank');
-  // Affiche la modale pour coller le code
-  setTimeout(() => document.getElementById('modal').classList.remove('hidden'), 800);
-}
-
-function closeModal() {
-  document.getElementById('modal').classList.add('hidden');
-}
-
-async function submitCode() {
-  const raw = document.getElementById('code-input').value.trim();
-  // Extraire juste le code si l'utilisateur a collé toute l'URL
-  let code = raw;
-  if (raw.includes('code=')) {
-    const m = raw.match(/[?&]code=([^&]+)/);
-    if (m) code = m[1];
-  }
-  if (!code) { alert('Code invalide, réessaie.'); return; }
-  closeModal();
-  await exchangeCode(code);
-}
-
-async function exchangeCode(code) {
-  const verifier = sessionStorage.getItem('pkce_v');
-  const res = await fetch('https://accounts.spotify.com/api/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'authorization_code',
-      code,
-      redirect_uri: REDIRECT_URI,
-      client_id: CLIENT_ID,
-      code_verifier: verifier
-    })
-  });
-  const data = await res.json();
-  if (!data.access_token) {
-    alert('Erreur d\'authentification : ' + (data.error_description || data.error));
-    return;
-  }
-  accessToken = data.access_token;
-  sessionStorage.setItem('spotify_token', accessToken);
+  sessionStorage.setItem('spotify_token', token);
   await loadUser();
 }
 
 async function loadUser() {
-  const res = await fetch('https://api.spotify.com/v1/me', {
-    headers: { Authorization: 'Bearer ' + accessToken }
-  });
-  const data = await res.json();
-  userId = data.id;
-  document.getElementById('status-dot').classList.add('connected');
-  document.getElementById('status-text').style.display = 'none';
-  const ui = document.getElementById('user-info');
-  ui.style.display = 'flex';
-  if (data.images && data.images.length > 0) document.getElementById('user-avatar').src = data.images[0].url;
-  else document.getElementById('user-avatar').style.display = 'none';
-  document.getElementById('user-name').textContent = data.display_name || data.id;
-  document.getElementById('connect-section').classList.add('hidden');
-  document.getElementById('config-section').classList.remove('hidden');
+  try {
+    const res = await fetch('https://api.spotify.com/v1/me', {
+      headers: { Authorization: 'Bearer ' + accessToken }
+    });
+    const data = await res.json();
+    if (!data.id) { alert('Token invalide ou expiré. Génère-en un nouveau.'); return; }
+    userId = data.id;
+    document.getElementById('status-dot').classList.add('connected');
+    document.getElementById('status-text').style.display = 'none';
+    const ui = document.getElementById('user-info');
+    ui.style.display = 'flex';
+    if (data.images && data.images.length > 0) document.getElementById('user-avatar').src = data.images[0].url;
+    else document.getElementById('user-avatar').style.display = 'none';
+    document.getElementById('user-name').textContent = data.display_name || data.id;
+    document.getElementById('connect-section').classList.add('hidden');
+    document.getElementById('config-section').classList.remove('hidden');
+  } catch(e) {
+    alert('Erreur de connexion. Vérifie ton token.');
+  }
 }
 
-// ── Génération ────────────────────────────────────────────────────────────────
+// ── Chargement des playlists sources ─────────────────────────────────────────
+async function loadPlaylist(id) {
+  const tracks = [];
+  let url = `https://api.spotify.com/v1/playlists/${id}/tracks?limit=100&market=FR&fields=next,items(track(uri,name,artists))`;
+  while (url) {
+    const res = await fetch(url, { headers: { Authorization: 'Bearer ' + accessToken } });
+    const data = await res.json();
+    for (const item of data.items) {
+      if (item.track && item.track.uri && item.track.uri.startsWith('spotify:track:')) {
+        tracks.push({
+          uri: item.track.uri,
+          name: item.track.name,
+          artist: item.track.artists[0]?.name || ''
+        });
+      }
+    }
+    url = data.next || null;
+  }
+  return tracks;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 function log(msg, type='info') {
   const d = document.createElement('div');
   d.className = 'log-line ' + type;
@@ -368,28 +263,24 @@ function log(msg, type='info') {
 }
 function setProgress(p) { document.getElementById('progress-bar').style.width = p + '%'; }
 
-function addTrackPreview(g, title, artist, status) {
+function addTrackPreview(g, title, artist) {
   const el = document.createElement('div');
   el.className = 'track-item';
   el.innerHTML = `<span class="track-badge ${g}">${g}</span>
-    <div style="flex:1"><div class="track-name">${title}</div><div class="track-artist">${artist}</div></div>
-    <span class="track-status ${status}">${status==='found'?'✓ trouvé':'✗ introuvable'}</span>`;
+    <div style="flex:1"><div class="track-name">${title}</div><div class="track-artist">${artist}</div></div>`;
   document.getElementById('tracks-preview').appendChild(el);
 }
 
 function shuffle(arr) {
-  const a=[...arr];
-  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  const a = [...arr];
+  for (let i = a.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i+1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
   return a;
 }
 
-async function searchTrack(q) {
-  const r = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track&limit=1&market=FR`,
-    { headers: { Authorization: 'Bearer ' + accessToken } });
-  const d = await r.json();
-  return d.tracks?.items?.[0] || null;
-}
-
+// ── Génération ────────────────────────────────────────────────────────────────
 async function generatePlaylist() {
   if (!accessToken) return;
   const btn = document.getElementById('gen-btn');
@@ -409,68 +300,84 @@ async function generatePlaylist() {
   document.getElementById('tracks-preview').innerHTML = '';
   setProgress(0);
 
-  log(`📋 ${rotations} rotations × (${nbS}S + ${nbB}B + ${nbK}K)`, 'info');
+  // Chargement des playlists sources
+  log('🎵 Chargement de la playlist Salsa…', 'info');
+  const sAll = await loadPlaylist(PLAYLIST_IDS.S);
+  log(`✓ ${sAll.length} titres salsa chargés`, 'ok');
+  setProgress(10);
 
-  const sP = shuffle(CATALOGUE.S), bP = shuffle(CATALOGUE.B), kP = shuffle(CATALOGUE.K);
+  log('🎵 Chargement de la playlist Bachata…', 'info');
+  const bAll = await loadPlaylist(PLAYLIST_IDS.B);
+  log(`✓ ${bAll.length} titres bachata chargés`, 'ok');
+  setProgress(20);
+
+  log('🎵 Chargement de la playlist Kizomba…', 'info');
+  const kAll = await loadPlaylist(PLAYLIST_IDS.K);
+  log(`✓ ${kAll.length} titres kizomba chargés`, 'ok');
+  setProgress(30);
+
+  // Mélange et construction des rotations
+  const sPool = shuffle(sAll);
+  const bPool = shuffle(bAll);
+  const kPool = shuffle(kAll);
+
   const list = [];
   for (let r = 0; r < rotations; r++) {
-    for (let i = 0; i < nbS; i++) list.push({ g:'S', q: sP[(r*nbS+i) % sP.length] });
-    for (let i = 0; i < nbB; i++) list.push({ g:'B', q: bP[(r*nbB+i) % bP.length] });
-    for (let i = 0; i < nbK; i++) list.push({ g:'K', q: kP[(r*nbK+i) % kP.length] });
+    for (let i = 0; i < nbS; i++) list.push({ g:'S', track: sPool[(r*nbS+i) % sPool.length] });
+    for (let i = 0; i < nbB; i++) list.push({ g:'B', track: bPool[(r*nbB+i) % bPool.length] });
+    for (let i = 0; i < nbK; i++) list.push({ g:'K', track: kPool[(r*nbK+i) % kPool.length] });
   }
 
-  log('🔨 Création de la playlist…', 'info');
-  const cRes = await fetch(`https://api.spotify.com/v1/me/playlists`, {
+  log(`📋 ${rotations} rotations × (${nbS}S + ${nbB}B + ${nbK}K) = ${list.length} titres`, 'info');
+
+  // Création de la playlist
+  log('🔨 Création de la playlist Spotify…', 'info');
+  const cRes = await fetch('https://api.spotify.com/v1/me/playlists', {
     method: 'POST',
     headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
     body: JSON.stringify({ name, description: `Playlist SBK ANWA DJ — ${new Date().toLocaleDateString('fr-FR')}`, public: true })
   });
   const pl = await cRes.json();
+  if (!pl.id) {
+    log(`❌ Erreur : ${JSON.stringify(pl)}`, 'err');
+    btn.disabled = false;
+    return;
+  }
   log(`✓ Playlist "${name}" créée`, 'ok');
-  setProgress(10);
+  setProgress(40);
 
+  // Affichage et collecte des URIs
   const uris = [];
   for (let i = 0; i < list.length; i++) {
-    const item = list[i];
-    const track = await searchTrack(item.q);
-    if (track) {
-      uris.push(track.uri);
-      addTrackPreview(item.g, track.name, track.artists[0].name, 'found');
-    } else {
-      addTrackPreview(item.g, item.q, '—', 'not-found');
-      log(`⚠ Introuvable : ${item.q}`, 'err');
-    }
-    setProgress(10 + Math.round((i / list.length) * 80));
-    await new Promise(r => setTimeout(r, 150));
+    const { g, track } = list[i];
+    uris.push(track.uri);
+    addTrackPreview(g, track.name, track.artist);
+    setProgress(40 + Math.round((i / list.length) * 50));
   }
 
+  // Ajout par batch de 100
   for (let i = 0; i < uris.length; i += 100) {
-    await fetch(`https://api.spotify.com/v1/playlists/${pl.id}/tracks`, {
+    const res = await fetch(`https://api.spotify.com/v1/playlists/${pl.id}/tracks`, {
       method: 'POST',
       headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
       body: JSON.stringify({ uris: uris.slice(i, i+100) })
     });
+    const d = await res.json();
+    if (d.error) { log(`❌ Erreur ajout tracks : ${d.error.message}`, 'err'); }
   }
 
   setProgress(100);
-  log(`🎉 ${uris.length} titres ajoutés !`, 'ok');
+  log(`🎉 ${uris.length} titres ajoutés avec succès !`, 'ok');
   document.getElementById('result-section').style.display = 'block';
   document.getElementById('result-desc').textContent = `${uris.length} titres · ${rotations} rotations SBK · ~${duree}h`;
-  document.getElementById('result-link').href = pl.external_urls.spotify;
+  document.getElementById('result-link').href = pl.external_urls?.spotify || '#';
   btn.disabled = false;
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-window.addEventListener('load', async () => {
-  const params = new URLSearchParams(window.location.search);
-  const code = params.get('code');
-  if (code) {
-    window.history.replaceState({}, document.title, window.location.pathname);
-    await exchangeCode(code);
-    return;
-  }
+window.addEventListener('load', () => {
   const saved = sessionStorage.getItem('spotify_token');
-  if (saved) { accessToken = saved; await loadUser(); }
+  if (saved) { accessToken = saved; loadUser(); }
 });
 </script>
 </body>
