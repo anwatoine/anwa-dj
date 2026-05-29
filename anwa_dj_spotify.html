@@ -22,7 +22,7 @@
     background-image: linear-gradient(rgba(29,185,84,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(29,185,84,0.03) 1px, transparent 1px);
     background-size: 40px 40px; pointer-events: none; z-index: 0;
   }
-  .app { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+  .app { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
   header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 3rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 1rem; }
   .logo { display: flex; align-items: center; gap: 12px; }
   .logo-icon { width: 42px; height: 42px; background: var(--green); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
@@ -49,13 +49,28 @@
   }
   input:focus, select:focus { border-color: var(--border-hover); }
   select option { background: var(--bg3); }
-  .genre-row { display: flex; gap: 10px; margin-bottom: 1.25rem; }
-  .genre-box { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg3); text-align: center; }
-  .genre-box label { font-size: 13px; font-weight: 600; margin-bottom: 8px; display: block; }
-  .genre-box.s label { color: var(--s-color); }
-  .genre-box.b label { color: var(--b-color); }
-  .genre-box.k label { color: var(--k-color); }
-  .genre-box input { text-align: center; width: 70px; }
+
+  /* TABLE GENRE */
+  .genre-table { width: 100%; border-collapse: collapse; margin-bottom: 1.25rem; }
+  .genre-table th { font-size: 11px; color: var(--muted); font-weight: 500; text-align: left; padding: 0 8px 8px 0; font-family: 'Space Mono', monospace; letter-spacing: .06em; text-transform: uppercase; }
+  .genre-table th.center { text-align: center; }
+  .genre-table td { padding: 6px 8px 6px 0; vertical-align: middle; }
+  .genre-table td input[type="number"] { width: 60px; text-align: center; padding: 8px 6px; }
+  .genre-label { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
+  .genre-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .genre-dot.s { background: var(--s-color); }
+  .genre-dot.b { background: var(--b-color); }
+  .genre-dot.k { background: var(--k-color); }
+  .era-split { display: flex; align-items: center; gap: 6px; }
+  .era-badge { font-size: 11px; padding: 3px 8px; border-radius: 50px; font-weight: 600; }
+  .era-badge.classic { background: rgba(255,255,255,0.08); color: var(--muted); }
+  .era-badge.recent { background: var(--green-dim); color: var(--green); }
+
+  /* SOURCES */
+  .src-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .src-label { font-size: 13px; font-weight: 600; min-width: 75px; flex-shrink: 0; }
+
+  /* PROGRESS */
   #progress-section { display: none; }
   .progress-wrap { background: var(--bg3); border-radius: 50px; height: 6px; overflow: hidden; margin: 1rem 0; }
   .progress-bar { height: 100%; background: var(--green); border-radius: 50px; width: 0%; transition: width .3s ease; }
@@ -64,19 +79,28 @@
   .log-line.ok { color: var(--green); }
   .log-line.err { color: #f87171; }
   .log-line.info { color: var(--muted); }
+
+  /* RESULT */
   #result-section { display: none; }
   .result-card { background: var(--green-dim); border: 1px solid rgba(29,185,84,0.3); border-radius: 16px; padding: 1.5rem; text-align: center; }
   .result-card h3 { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
   .result-card p { color: var(--muted); font-size: 14px; margin-bottom: 1.25rem; }
   .btn-open { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: var(--green); color: #000; font-weight: 600; font-size: 14px; border-radius: 50px; text-decoration: none; }
+
+  /* TRACKS */
   #tracks-preview { margin-top: 1rem; }
-  .track-item { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+  .track-item { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--border); }
   .track-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 50px; flex-shrink: 0; }
   .track-badge.S { background: var(--s-bg); color: var(--s-color); }
   .track-badge.B { background: var(--b-bg); color: var(--b-color); }
   .track-badge.K { background: var(--k-bg); color: var(--k-color); }
   .track-name { font-size: 13px; font-weight: 500; flex: 1; }
   .track-artist { font-size: 12px; color: var(--muted); }
+  .track-year { font-size: 11px; padding: 2px 7px; border-radius: 50px; flex-shrink: 0; }
+  .track-year.classic { background: rgba(255,255,255,0.07); color: var(--muted); }
+  .track-year.recent { background: var(--green-dim); color: var(--green); }
+
+  /* MISC */
   #status-bar { display: flex; align-items: center; gap: 8px; }
   .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
   .dot.connected { background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite; }
@@ -87,8 +111,6 @@
   .info-box { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-size: 13px; color: var(--muted); line-height: 1.8; margin-bottom: 1rem; }
   .info-box a { color: var(--green); }
   .step { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; background: var(--green); color: #000; border-radius: 50%; font-size: 11px; font-weight: 700; margin-right: 6px; }
-  .src-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-  .src-label { font-size: 13px; font-weight: 600; min-width: 75px; flex-shrink: 0; }
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 2px; }
 </style>
@@ -138,6 +160,7 @@
   <section id="config-section" class="hidden">
     <div class="section-title">Configuration de la playlist</div>
     <div class="card">
+
       <div class="config-grid">
         <div>
           <label>Nom de la playlist</label>
@@ -158,23 +181,60 @@
       <div style="margin-bottom:1.25rem">
         <div class="src-row">
           <span class="src-label" style="color:var(--s-color)">💃 Salsa</span>
-          <input type="text" id="src-s" placeholder="Lien ou ID playlist Spotify" value="6SzueO7QgQjoPicIO9Lkqn"/>
+          <input type="text" id="src-s" placeholder="Lien ou ID playlist" value="6SzueO7QgQjoPicIO9Lkqn"/>
         </div>
         <div class="src-row">
           <span class="src-label" style="color:var(--b-color)">🌹 Bachata</span>
-          <input type="text" id="src-b" placeholder="Lien ou ID playlist Spotify" value="2Ef6Ltu5hNVWmUySmwTUe1"/>
+          <input type="text" id="src-b" placeholder="Lien ou ID playlist" value="2Ef6Ltu5hNVWmUySmwTUe1"/>
         </div>
         <div class="src-row">
           <span class="src-label" style="color:var(--k-color)">🌙 Kizomba</span>
-          <input type="text" id="src-k" placeholder="Lien ou ID playlist Spotify" value="0O6sDyu0Ft8UCRkoMTmBp2"/>
+          <input type="text" id="src-k" placeholder="Lien ou ID playlist" value="0O6sDyu0Ft8UCRkoMTmBp2"/>
         </div>
       </div>
 
-      <div class="section-title">Répartition par genre (titres par rotation)</div>
-      <div class="genre-row">
-        <div class="genre-box s"><label>💃 Salsa</label><input type="number" id="nb-s" value="3" min="1" max="6"></div>
-        <div class="genre-box b"><label>🌹 Bachata</label><input type="number" id="nb-b" value="3" min="1" max="6"></div>
-        <div class="genre-box k"><label>🌙 Kizomba</label><input type="number" id="nb-k" value="3" min="1" max="6"></div>
+      <div class="section-title">Répartition par rotation</div>
+      <table class="genre-table">
+        <thead>
+          <tr>
+            <th>Genre</th>
+            <th class="center">Total / rotation</th>
+            <th class="center">dont Classiques<br><span style="font-weight:400;color:var(--muted)">(avant 2020)</span></th>
+            <th class="center">dont Récents<br><span style="font-weight:400;color:var(--green)">(2020+)</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><div class="genre-label"><div class="genre-dot s"></div>Salsa</div></td>
+            <td style="text-align:center"><input type="number" id="nb-s" value="3" min="1" max="8" onchange="syncEra('s')"></td>
+            <td style="text-align:center"><input type="number" id="cl-s" value="1" min="0" max="8" onchange="syncEra('s')"></td>
+            <td style="text-align:center"><input type="number" id="re-s" value="2" min="0" max="8" onchange="syncEra('s')"></td>
+          </tr>
+          <tr>
+            <td><div class="genre-label"><div class="genre-dot b"></div>Bachata</div></td>
+            <td style="text-align:center"><input type="number" id="nb-b" value="3" min="1" max="8" onchange="syncEra('b')"></td>
+            <td style="text-align:center"><input type="number" id="cl-b" value="1" min="0" max="8" onchange="syncEra('b')"></td>
+            <td style="text-align:center"><input type="number" id="re-b" value="2" min="0" max="8" onchange="syncEra('b')"></td>
+          </tr>
+          <tr>
+            <td><div class="genre-label"><div class="genre-dot k"></div>Kizomba</div></td>
+            <td style="text-align:center"><input type="number" id="nb-k" value="3" min="1" max="8" onchange="syncEra('k')"></td>
+            <td style="text-align:center"><input type="number" id="cl-k" value="1" min="0" max="8" onchange="syncEra('k')"></td>
+            <td style="text-align:center"><input type="number" id="re-k" value="2" min="0" max="8" onchange="syncEra('k')"></td>
+          </tr>
+        </tbody>
+      </table>
+      <p id="era-warning" style="font-size:12px;color:#f87171;margin-bottom:1rem;display:none">⚠ Classiques + Récents doit être égal au Total pour chaque genre.</p>
+
+      <div style="margin-bottom:1.25rem">
+        <label>Année limite classique / récent</label>
+        <select id="era-year">
+          <option value="2018">Avant 2018 = classique</option>
+          <option value="2019">Avant 2019 = classique</option>
+          <option value="2020" selected>Avant 2020 = classique</option>
+          <option value="2021">Avant 2021 = classique</option>
+          <option value="2022">Avant 2022 = classique</option>
+        </select>
       </div>
 
       <button class="btn-green" id="gen-btn">
@@ -218,6 +278,21 @@ function extractId(val) {
   return m ? m[1] : val;
 }
 
+function syncEra(g) {
+  var nb = parseInt(document.getElementById('nb-' + g).value) || 0;
+  var cl = parseInt(document.getElementById('cl-' + g).value) || 0;
+  var re = parseInt(document.getElementById('re-' + g).value) || 0;
+  var warn = document.getElementById('era-warning');
+  var valid = true;
+  ['s','b','k'].forEach(function(x) {
+    var n = parseInt(document.getElementById('nb-' + x).value) || 0;
+    var c = parseInt(document.getElementById('cl-' + x).value) || 0;
+    var r = parseInt(document.getElementById('re-' + x).value) || 0;
+    if (c + r !== n) valid = false;
+  });
+  warn.style.display = valid ? 'none' : 'block';
+}
+
 function log(msg, type) {
   type = type || 'info';
   var d = document.createElement('div');
@@ -231,12 +306,14 @@ function setProgress(p) {
   document.getElementById('progress-bar').style.width = p + '%';
 }
 
-function addTrackPreview(g, title, artist) {
+function addTrackPreview(g, title, artist, year, eraYear) {
+  var isRecent = year >= eraYear;
   var el = document.createElement('div');
   el.className = 'track-item';
   el.innerHTML = '<span class="track-badge ' + g + '">' + g + '</span>' +
     '<div style="flex:1"><div class="track-name">' + title + '</div>' +
-    '<div class="track-artist">' + artist + '</div></div>';
+    '<div class="track-artist">' + artist + '</div></div>' +
+    '<span class="track-year ' + (isRecent ? 'recent' : 'classic') + '">' + year + '</span>';
   document.getElementById('tracks-preview').appendChild(el);
 }
 
@@ -253,60 +330,94 @@ function loadUser() {
   return fetch('https://api.spotify.com/v1/me', {
     headers: { Authorization: 'Bearer ' + accessToken }
   }).then(function(r) { return r.json(); }).then(function(data) {
-    if (!data.id) { alert('Token invalide ou expiré. Génère-en un nouveau.'); return; }
+    if (!data.id) { alert('Token invalide ou expiré.'); return; }
     userId = data.id;
     document.getElementById('status-dot').classList.add('connected');
     document.getElementById('status-text').style.display = 'none';
     var ui = document.getElementById('user-info');
     ui.style.display = 'flex';
-    if (data.images && data.images.length > 0) {
-      document.getElementById('user-avatar').src = data.images[0].url;
-    } else {
-      document.getElementById('user-avatar').style.display = 'none';
-    }
+    if (data.images && data.images.length > 0) document.getElementById('user-avatar').src = data.images[0].url;
+    else document.getElementById('user-avatar').style.display = 'none';
     document.getElementById('user-name').textContent = data.display_name || data.id;
     document.getElementById('connect-section').classList.add('hidden');
     document.getElementById('config-section').classList.remove('hidden');
-  }).catch(function() {
-    alert('Erreur de connexion. Vérifie ton token.');
-  });
+  }).catch(function() { alert('Erreur connexion. Vérifie ton token.'); });
 }
 
 function loadPlaylist(id) {
   var tracks = [];
   function fetchPage(url) {
-    return fetch(url, {
-      headers: { Authorization: 'Bearer ' + accessToken }
-    }).then(function(r) { return r.json(); }).then(function(data) {
-      if (data.items) {
-        data.items.forEach(function(item) {
-          if (item.track && item.track.uri && item.track.uri.indexOf('spotify:track:') === 0) {
-            tracks.push({
-              uri: item.track.uri,
-              name: item.track.name,
-              artist: item.track.artists[0] ? item.track.artists[0].name : ''
-            });
-          }
-        });
-      }
-      if (data.next) return fetchPage(data.next);
-      return tracks;
-    });
+    return fetch(url, { headers: { Authorization: 'Bearer ' + accessToken } })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.items) {
+          data.items.forEach(function(item) {
+            if (item.track && item.track.uri && item.track.uri.indexOf('spotify:track:') === 0) {
+              var releaseDate = item.track.album ? item.track.album.release_date : '0000';
+              var year = parseInt(releaseDate.substring(0, 4)) || 0;
+              tracks.push({
+                uri: item.track.uri,
+                name: item.track.name,
+                artist: item.track.artists[0] ? item.track.artists[0].name : '',
+                year: year
+              });
+            }
+          });
+        }
+        if (data.next) return fetchPage(data.next);
+        return tracks;
+      });
   }
-  var url = 'https://api.spotify.com/v1/playlists/' + id + '/tracks?limit=100&market=FR&fields=next,items(track(uri,name,artists))';
+  var url = 'https://api.spotify.com/v1/playlists/' + id +
+    '/tracks?limit=100&market=FR&fields=next,items(track(uri,name,artists,album(release_date)))';
   return fetchPage(url);
+}
+
+function pickTracks(pool, count, eraYear, wantClassic) {
+  var filtered = pool.filter(function(t) {
+    return wantClassic ? t.year < eraYear : t.year >= eraYear;
+  });
+  if (filtered.length === 0) {
+    // Fallback si pas assez de titres de cette ère
+    filtered = pool.slice();
+  }
+  var result = [];
+  for (var i = 0; i < count; i++) {
+    result.push(filtered[i % filtered.length]);
+  }
+  return result;
 }
 
 function generatePlaylist() {
   if (!accessToken) return;
+
+  // Validation
+  var valid = true;
+  ['s','b','k'].forEach(function(x) {
+    var n = parseInt(document.getElementById('nb-' + x).value) || 0;
+    var c = parseInt(document.getElementById('cl-' + x).value) || 0;
+    var r = parseInt(document.getElementById('re-' + x).value) || 0;
+    if (c + r !== n) valid = false;
+  });
+  if (!valid) { alert('Classiques + Récents doit être égal au Total pour chaque genre.'); return; }
+
   var btn = document.getElementById('gen-btn');
   btn.disabled = true;
 
   var name = document.getElementById('playlist-name').value || 'ANWA SBK';
   var duree = parseInt(document.getElementById('duree').value);
+  var eraYear = parseInt(document.getElementById('era-year').value);
+
   var nbS = parseInt(document.getElementById('nb-s').value);
+  var clS = parseInt(document.getElementById('cl-s').value);
+  var reS = parseInt(document.getElementById('re-s').value);
   var nbB = parseInt(document.getElementById('nb-b').value);
+  var clB = parseInt(document.getElementById('cl-b').value);
+  var reB = parseInt(document.getElementById('re-b').value);
   var nbK = parseInt(document.getElementById('nb-k').value);
+  var clK = parseInt(document.getElementById('cl-k').value);
+  var reK = parseInt(document.getElementById('re-k').value);
+
   var perRot = nbS + nbB + nbK;
   var rotations = Math.ceil((duree * 60 / 4) / perRot);
 
@@ -322,49 +433,62 @@ function generatePlaylist() {
 
   log('🎵 Chargement playlist Salsa…', 'info');
   loadPlaylist(idS).then(function(sAll) {
-    log('✓ ' + sAll.length + ' titres salsa', 'ok');
+    var sClassic = shuffle(sAll.filter(function(t){ return t.year < eraYear; }));
+    var sRecent  = shuffle(sAll.filter(function(t){ return t.year >= eraYear; }));
+    log('✓ Salsa : ' + sClassic.length + ' classiques / ' + sRecent.length + ' récents', 'ok');
     setProgress(10);
+
     log('🎵 Chargement playlist Bachata…', 'info');
     return loadPlaylist(idB).then(function(bAll) {
-      log('✓ ' + bAll.length + ' titres bachata', 'ok');
+      var bClassic = shuffle(bAll.filter(function(t){ return t.year < eraYear; }));
+      var bRecent  = shuffle(bAll.filter(function(t){ return t.year >= eraYear; }));
+      log('✓ Bachata : ' + bClassic.length + ' classiques / ' + bRecent.length + ' récents', 'ok');
       setProgress(20);
+
       log('🎵 Chargement playlist Kizomba…', 'info');
       return loadPlaylist(idK).then(function(kAll) {
-        log('✓ ' + kAll.length + ' titres kizomba', 'ok');
+        var kClassic = shuffle(kAll.filter(function(t){ return t.year < eraYear; }));
+        var kRecent  = shuffle(kAll.filter(function(t){ return t.year >= eraYear; }));
+        log('✓ Kizomba : ' + kClassic.length + ' classiques / ' + kRecent.length + ' récents', 'ok');
         setProgress(30);
 
-        var sPool = shuffle(sAll);
-        var bPool = shuffle(bAll);
-        var kPool = shuffle(kAll);
+        // Construction des rotations
         var list = [];
         for (var r = 0; r < rotations; r++) {
-          for (var i = 0; i < nbS; i++) list.push({ g: 'S', track: sPool[(r*nbS+i) % sPool.length] });
-          for (var i = 0; i < nbB; i++) list.push({ g: 'B', track: bPool[(r*nbB+i) % bPool.length] });
-          for (var i = 0; i < nbK; i++) list.push({ g: 'K', track: kPool[(r*nbK+i) % kPool.length] });
+          // Salsa
+          for (var i = 0; i < clS; i++) list.push({ g:'S', track: sClassic[(r*clS+i) % (sClassic.length||1)] });
+          for (var i = 0; i < reS; i++) list.push({ g:'S', track: sRecent[(r*reS+i) % (sRecent.length||1)] });
+          // Bachata
+          for (var i = 0; i < clB; i++) list.push({ g:'B', track: bClassic[(r*clB+i) % (bClassic.length||1)] });
+          for (var i = 0; i < reB; i++) list.push({ g:'B', track: bRecent[(r*reB+i) % (bRecent.length||1)] });
+          // Kizomba
+          for (var i = 0; i < clK; i++) list.push({ g:'K', track: kClassic[(r*clK+i) % (kClassic.length||1)] });
+          for (var i = 0; i < reK; i++) list.push({ g:'K', track: kRecent[(r*reK+i) % (kRecent.length||1)] });
         }
-        log('📋 ' + rotations + ' rotations × (' + nbS + 'S+' + nbB + 'B+' + nbK + 'K) = ' + list.length + ' titres', 'info');
 
+        log('📋 ' + rotations + ' rotations · ' + list.length + ' titres', 'info');
         log('🔨 Création de la playlist…', 'info');
+
         return fetch('https://api.spotify.com/v1/me/playlists', {
           method: 'POST',
           headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: name, description: 'Playlist SBK ANWA DJ — ' + new Date().toLocaleDateString('fr-FR'), public: true })
         }).then(function(r) { return r.json(); }).then(function(pl) {
-          if (!pl.id) { log('❌ Erreur création : ' + JSON.stringify(pl), 'err'); btn.disabled = false; return; }
+          if (!pl.id) { log('❌ Erreur : ' + JSON.stringify(pl), 'err'); btn.disabled = false; return; }
           log('✓ Playlist "' + name + '" créée', 'ok');
           setProgress(40);
 
           var uris = [];
           list.forEach(function(item) {
-            uris.push(item.track.uri);
-            addTrackPreview(item.g, item.track.name, item.track.artist);
+            if (item.track) {
+              uris.push(item.track.uri);
+              addTrackPreview(item.g, item.track.name, item.track.artist, item.track.year, eraYear);
+            }
           });
           setProgress(80);
 
           var batches = [];
-          for (var i = 0; i < uris.length; i += 100) {
-            batches.push(uris.slice(i, i + 100));
-          }
+          for (var i = 0; i < uris.length; i += 100) batches.push(uris.slice(i, i+100));
 
           function addBatch(idx) {
             if (idx >= batches.length) return Promise.resolve();
@@ -374,7 +498,7 @@ function generatePlaylist() {
               body: JSON.stringify({ uris: batches[idx] })
             }).then(function(r) { return r.json(); }).then(function(d) {
               if (d.error) log('❌ ' + d.error.message, 'err');
-              return addBatch(idx + 1);
+              return addBatch(idx+1);
             });
           }
 
