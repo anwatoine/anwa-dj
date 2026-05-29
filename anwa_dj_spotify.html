@@ -14,6 +14,7 @@
     --s-color: #3b82f6; --s-bg: rgba(59,130,246,0.12);
     --b-color: #f59e0b; --b-bg: rgba(245,158,11,0.12);
     --k-color: #a78bfa; --k-bg: rgba(167,139,250,0.12);
+    --ko-color: #f43f5e; --ko-bg: rgba(244,63,94,0.12);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
@@ -42,35 +43,34 @@
   .btn-green:hover { background: #22d464; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(29,185,84,0.3); }
   .btn-green:disabled { opacity: .4; cursor: not-allowed; transform: none; box-shadow: none; }
   .config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; }
+  .config-grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; }
   label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
-  input[type="text"], input[type="number"], select {
+  input[type="text"], input[type="number"], input[type="time"], select {
     width: 100%; padding: 10px 14px; background: var(--bg3); border: 1px solid var(--border);
     border-radius: 10px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none; transition: border-color .2s;
   }
   input:focus, select:focus { border-color: var(--border-hover); }
   select option { background: var(--bg3); }
-
-  /* TABLE GENRE */
   .genre-table { width: 100%; border-collapse: collapse; margin-bottom: 1.25rem; }
-  .genre-table th { font-size: 11px; color: var(--muted); font-weight: 500; text-align: left; padding: 0 8px 8px 0; font-family: 'Space Mono', monospace; letter-spacing: .06em; text-transform: uppercase; }
-  .genre-table th.center { text-align: center; }
-  .genre-table td { padding: 6px 8px 6px 0; vertical-align: middle; }
-  .genre-table td input[type="number"] { width: 60px; text-align: center; padding: 8px 6px; }
+  .genre-table th { font-size: 11px; color: var(--muted); font-weight: 500; text-align: center; padding: 0 6px 10px; font-family: 'Space Mono', monospace; letter-spacing: .05em; text-transform: uppercase; }
+  .genre-table th:first-child { text-align: left; }
+  .genre-table td { padding: 6px; vertical-align: middle; text-align: center; }
+  .genre-table td:first-child { text-align: left; }
+  .genre-table td input[type="number"] { width: 58px; text-align: center; padding: 8px 4px; }
   .genre-label { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
   .genre-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
   .genre-dot.s { background: var(--s-color); }
   .genre-dot.b { background: var(--b-color); }
   .genre-dot.k { background: var(--k-color); }
-  .era-split { display: flex; align-items: center; gap: 6px; }
-  .era-badge { font-size: 11px; padding: 3px 8px; border-radius: 50px; font-weight: 600; }
-  .era-badge.classic { background: rgba(255,255,255,0.08); color: var(--muted); }
-  .era-badge.recent { background: var(--green-dim); color: var(--green); }
-
-  /* SOURCES */
+  .genre-dot.ko { background: var(--ko-color); }
   .src-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-  .src-label { font-size: 13px; font-weight: 600; min-width: 75px; flex-shrink: 0; }
-
-  /* PROGRESS */
+  .src-label { font-size: 13px; font-weight: 600; min-width: 80px; flex-shrink: 0; }
+  .konpa-box { background: rgba(244,63,94,0.06); border: 1px solid rgba(244,63,94,0.2); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem; }
+  .konpa-box .section-title { color: var(--ko-color); }
+  .time-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+  .timeline-preview { background: var(--bg3); border-radius: 10px; padding: 12px 14px; font-size: 12px; color: var(--muted); font-family: 'Space Mono', monospace; }
+  .timeline-preview span.sbk { color: var(--green); }
+  .timeline-preview span.ko { color: var(--ko-color); }
   #progress-section { display: none; }
   .progress-wrap { background: var(--bg3); border-radius: 50px; height: 6px; overflow: hidden; margin: 1rem 0; }
   .progress-bar { height: 100%; background: var(--green); border-radius: 50px; width: 0%; transition: width .3s ease; }
@@ -79,28 +79,25 @@
   .log-line.ok { color: var(--green); }
   .log-line.err { color: #f87171; }
   .log-line.info { color: var(--muted); }
-
-  /* RESULT */
+  .log-line.ko { color: var(--ko-color); }
   #result-section { display: none; }
   .result-card { background: var(--green-dim); border: 1px solid rgba(29,185,84,0.3); border-radius: 16px; padding: 1.5rem; text-align: center; }
   .result-card h3 { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
   .result-card p { color: var(--muted); font-size: 14px; margin-bottom: 1.25rem; }
   .btn-open { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: var(--green); color: #000; font-weight: 600; font-size: 14px; border-radius: 50px; text-decoration: none; }
-
-  /* TRACKS */
   #tracks-preview { margin-top: 1rem; }
   .track-item { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--border); }
   .track-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 50px; flex-shrink: 0; }
   .track-badge.S { background: var(--s-bg); color: var(--s-color); }
   .track-badge.B { background: var(--b-bg); color: var(--b-color); }
   .track-badge.K { background: var(--k-bg); color: var(--k-color); }
+  .track-badge.KO { background: var(--ko-bg); color: var(--ko-color); }
   .track-name { font-size: 13px; font-weight: 500; flex: 1; }
   .track-artist { font-size: 12px; color: var(--muted); }
   .track-year { font-size: 11px; padding: 2px 7px; border-radius: 50px; flex-shrink: 0; }
   .track-year.classic { background: rgba(255,255,255,0.07); color: var(--muted); }
   .track-year.recent { background: var(--green-dim); color: var(--green); }
-
-  /* MISC */
+  .track-time { font-size: 11px; color: var(--muted); min-width: 45px; text-align: right; flex-shrink: 0; }
   #status-bar { display: flex; align-items: center; gap: 8px; }
   .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
   .dot.connected { background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite; }
@@ -167,64 +164,92 @@
           <input type="text" id="playlist-name" value="ANWA SBK — Soirée BS Event"/>
         </div>
         <div>
-          <label>Durée de la soirée</label>
+          <label>Durée totale de la soirée</label>
           <select id="duree">
-            <option value="2">2 heures (~30 titres)</option>
-            <option value="3">3 heures (~45 titres)</option>
-            <option value="4" selected>4 heures (~54 titres)</option>
-            <option value="5">5 heures (~66 titres)</option>
+            <option value="2">2 heures</option>
+            <option value="3">3 heures</option>
+            <option value="4" selected>4 heures</option>
+            <option value="5">5 heures</option>
+            <option value="6">6 heures</option>
           </select>
         </div>
       </div>
 
       <div class="section-title">Playlists sources Spotify</div>
       <div style="margin-bottom:1.25rem">
-        <div class="src-row">
-          <span class="src-label" style="color:var(--s-color)">💃 Salsa</span>
-          <input type="text" id="src-s" placeholder="Lien ou ID playlist" value="6SzueO7QgQjoPicIO9Lkqn"/>
-        </div>
-        <div class="src-row">
-          <span class="src-label" style="color:var(--b-color)">🌹 Bachata</span>
-          <input type="text" id="src-b" placeholder="Lien ou ID playlist" value="2Ef6Ltu5hNVWmUySmwTUe1"/>
-        </div>
-        <div class="src-row">
-          <span class="src-label" style="color:var(--k-color)">🌙 Kizomba</span>
-          <input type="text" id="src-k" placeholder="Lien ou ID playlist" value="0O6sDyu0Ft8UCRkoMTmBp2"/>
-        </div>
+        <div class="src-row"><span class="src-label" style="color:var(--s-color)">💃 Salsa</span><input type="text" id="src-s" value="6SzueO7QgQjoPicIO9Lkqn" placeholder="Lien ou ID"/></div>
+        <div class="src-row"><span class="src-label" style="color:var(--b-color)">🌹 Bachata</span><input type="text" id="src-b" value="2Ef6Ltu5hNVWmUySmwTUe1" placeholder="Lien ou ID"/></div>
+        <div class="src-row"><span class="src-label" style="color:var(--k-color)">🌙 Kizomba</span><input type="text" id="src-k" value="0O6sDyu0Ft8UCRkoMTmBp2" placeholder="Lien ou ID"/></div>
+        <div class="src-row"><span class="src-label" style="color:var(--ko-color)">🎺 Konpa</span><input type="text" id="src-ko" value="" placeholder="Lien ou ID playlist Konpa"/></div>
       </div>
 
-      <div class="section-title">Répartition par rotation</div>
+      <div class="section-title">Répartition SBK par rotation</div>
       <table class="genre-table">
         <thead>
           <tr>
             <th>Genre</th>
-            <th class="center">Total / rotation</th>
-            <th class="center">dont Classiques<br><span style="font-weight:400;color:var(--muted)">(avant 2020)</span></th>
-            <th class="center">dont Récents<br><span style="font-weight:400;color:var(--green)">(2020+)</span></th>
+            <th>Total / rotation</th>
+            <th>Classiques<br><span style="font-weight:400;font-size:10px">(avant seuil)</span></th>
+            <th>Récents<br><span style="font-weight:400;font-size:10px;color:var(--green)">(après seuil)</span></th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td><div class="genre-label"><div class="genre-dot s"></div>Salsa</div></td>
-            <td style="text-align:center"><input type="number" id="nb-s" value="3" min="1" max="8" onchange="syncEra('s')"></td>
-            <td style="text-align:center"><input type="number" id="cl-s" value="1" min="0" max="8" onchange="syncEra('s')"></td>
-            <td style="text-align:center"><input type="number" id="re-s" value="2" min="0" max="8" onchange="syncEra('s')"></td>
+            <td><input type="number" id="nb-s" value="3" min="1" max="8" oninput="updateTimeline()"></td>
+            <td><input type="number" id="cl-s" value="1" min="0" max="8"></td>
+            <td><input type="number" id="re-s" value="2" min="0" max="8"></td>
           </tr>
           <tr>
             <td><div class="genre-label"><div class="genre-dot b"></div>Bachata</div></td>
-            <td style="text-align:center"><input type="number" id="nb-b" value="3" min="1" max="8" onchange="syncEra('b')"></td>
-            <td style="text-align:center"><input type="number" id="cl-b" value="1" min="0" max="8" onchange="syncEra('b')"></td>
-            <td style="text-align:center"><input type="number" id="re-b" value="2" min="0" max="8" onchange="syncEra('b')"></td>
+            <td><input type="number" id="nb-b" value="3" min="1" max="8" oninput="updateTimeline()"></td>
+            <td><input type="number" id="cl-b" value="1" min="0" max="8"></td>
+            <td><input type="number" id="re-b" value="2" min="0" max="8"></td>
           </tr>
           <tr>
             <td><div class="genre-label"><div class="genre-dot k"></div>Kizomba</div></td>
-            <td style="text-align:center"><input type="number" id="nb-k" value="3" min="1" max="8" onchange="syncEra('k')"></td>
-            <td style="text-align:center"><input type="number" id="cl-k" value="1" min="0" max="8" onchange="syncEra('k')"></td>
-            <td style="text-align:center"><input type="number" id="re-k" value="2" min="0" max="8" onchange="syncEra('k')"></td>
+            <td><input type="number" id="nb-k" value="3" min="1" max="8" oninput="updateTimeline()"></td>
+            <td><input type="number" id="cl-k" value="1" min="0" max="8"></td>
+            <td><input type="number" id="re-k" value="2" min="0" max="8"></td>
           </tr>
         </tbody>
       </table>
-      <p id="era-warning" style="font-size:12px;color:#f87171;margin-bottom:1rem;display:none">⚠ Classiques + Récents doit être égal au Total pour chaque genre.</p>
+
+      <!-- KONPA SECTION -->
+      <div class="konpa-box">
+        <div class="section-title">🎺 Phase Konpa</div>
+        <div class="time-grid">
+          <div>
+            <label>Heure de début de soirée</label>
+            <input type="time" id="time-start" value="23:00" oninput="updateTimeline()"/>
+          </div>
+          <div>
+            <label>Heure de début du Konpa</label>
+            <input type="time" id="time-konpa" value="02:15" oninput="updateTimeline()"/>
+          </div>
+        </div>
+        <table class="genre-table" style="margin-bottom:1rem">
+          <thead>
+            <tr>
+              <th>Genre</th>
+              <th>Total / rotation</th>
+              <th>Classiques</th>
+              <th>Récents</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><div class="genre-label"><div class="genre-dot ko"></div>Konpa</div></td>
+              <td><input type="number" id="nb-ko" value="3" min="1" max="8" oninput="updateTimeline()"></td>
+              <td><input type="number" id="cl-ko" value="1" min="0" max="8"></td>
+              <td><input type="number" id="re-ko" value="2" min="0" max="8"></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="timeline-preview" id="timeline-preview">
+          Aperçu de la timeline…
+        </div>
+      </div>
 
       <div style="margin-bottom:1.25rem">
         <label>Année limite classique / récent</label>
@@ -278,19 +303,48 @@ function extractId(val) {
   return m ? m[1] : val;
 }
 
-function syncEra(g) {
-  var nb = parseInt(document.getElementById('nb-' + g).value) || 0;
-  var cl = parseInt(document.getElementById('cl-' + g).value) || 0;
-  var re = parseInt(document.getElementById('re-' + g).value) || 0;
-  var warn = document.getElementById('era-warning');
-  var valid = true;
-  ['s','b','k'].forEach(function(x) {
-    var n = parseInt(document.getElementById('nb-' + x).value) || 0;
-    var c = parseInt(document.getElementById('cl-' + x).value) || 0;
-    var r = parseInt(document.getElementById('re-' + x).value) || 0;
-    if (c + r !== n) valid = false;
-  });
-  warn.style.display = valid ? 'none' : 'block';
+function timeToMinutes(t) {
+  var parts = t.split(':');
+  return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+}
+
+function minutesToTime(m) {
+  m = ((m % 1440) + 1440) % 1440;
+  var h = Math.floor(m / 60) % 24;
+  var min = m % 60;
+  return (h < 10 ? '0' : '') + h + 'h' + (min < 10 ? '0' : '') + min;
+}
+
+function updateTimeline() {
+  var startMin = timeToMinutes(document.getElementById('time-start').value);
+  var konpaMin = timeToMinutes(document.getElementById('time-konpa').value);
+  var duree = parseInt(document.getElementById('duree').value) * 60;
+  var endMin = startMin + duree;
+
+  // Gérer le passage minuit
+  var konpaOffset = konpaMin - startMin;
+  if (konpaOffset < 0) konpaOffset += 1440;
+
+  var nbS = parseInt(document.getElementById('nb-s').value) || 3;
+  var nbB = parseInt(document.getElementById('nb-b').value) || 3;
+  var nbK = parseInt(document.getElementById('nb-k').value) || 3;
+  var nbKo = parseInt(document.getElementById('nb-ko').value) || 3;
+  var perRotSBK = nbS + nbB + nbK;
+  var avgTrack = 4;
+  var rotDurSBK = perRotSBK * avgTrack;
+  var rotDurKO = nbKo * avgTrack;
+
+  var sbkRotations = Math.floor(konpaOffset / rotDurSBK);
+  var sbkDur = sbkRotations * rotDurSBK;
+  var koDur = duree - sbkDur;
+  var koRotations = Math.ceil(koDur / rotDurKO);
+
+  var preview = document.getElementById('timeline-preview');
+  preview.innerHTML =
+    '<span class="sbk">● SBK</span> ' + minutesToTime(startMin) + ' → ' + minutesToTime(startMin + sbkDur) +
+    ' (' + sbkRotations + ' rotations · ' + (sbkRotations * perRotSBK) + ' titres)' +
+    '<br><span class="ko">● KONPA</span> ' + minutesToTime(startMin + sbkDur) + ' → ' + minutesToTime(startMin + duree) +
+    ' (' + koRotations + ' rotations · ' + (koRotations * nbKo) + ' titres)';
 }
 
 function log(msg, type) {
@@ -306,14 +360,16 @@ function setProgress(p) {
   document.getElementById('progress-bar').style.width = p + '%';
 }
 
-function addTrackPreview(g, title, artist, year, eraYear) {
+function addTrackPreview(g, title, artist, year, eraYear, timeStr) {
   var isRecent = year >= eraYear;
   var el = document.createElement('div');
   el.className = 'track-item';
-  el.innerHTML = '<span class="track-badge ' + g + '">' + g + '</span>' +
+  el.innerHTML =
+    '<span class="track-badge ' + g + '">' + g + '</span>' +
     '<div style="flex:1"><div class="track-name">' + title + '</div>' +
     '<div class="track-artist">' + artist + '</div></div>' +
-    '<span class="track-year ' + (isRecent ? 'recent' : 'classic') + '">' + year + '</span>';
+    '<span class="track-year ' + (isRecent ? 'recent' : 'classic') + '">' + year + '</span>' +
+    '<span class="track-time">' + timeStr + '</span>';
   document.getElementById('tracks-preview').appendChild(el);
 }
 
@@ -341,6 +397,7 @@ function loadUser() {
     document.getElementById('user-name').textContent = data.display_name || data.id;
     document.getElementById('connect-section').classList.add('hidden');
     document.getElementById('config-section').classList.remove('hidden');
+    updateTimeline();
   }).catch(function() { alert('Erreur connexion. Vérifie ton token.'); });
 }
 
@@ -355,12 +412,7 @@ function loadPlaylist(id) {
             if (item.track && item.track.uri && item.track.uri.indexOf('spotify:track:') === 0) {
               var releaseDate = item.track.album ? item.track.album.release_date : '0000';
               var year = parseInt(releaseDate.substring(0, 4)) || 0;
-              tracks.push({
-                uri: item.track.uri,
-                name: item.track.name,
-                artist: item.track.artists[0] ? item.track.artists[0].name : '',
-                year: year
-              });
+              tracks.push({ uri: item.track.uri, name: item.track.name, artist: item.track.artists[0] ? item.track.artists[0].name : '', year: year });
             }
           });
         }
@@ -368,39 +420,12 @@ function loadPlaylist(id) {
         return tracks;
       });
   }
-  var url = 'https://api.spotify.com/v1/playlists/' + id +
-    '/tracks?limit=100&market=FR&fields=next,items(track(uri,name,artists,album(release_date)))';
+  var url = 'https://api.spotify.com/v1/playlists/' + id + '/tracks?limit=100&market=FR&fields=next,items(track(uri,name,artists,album(release_date)))';
   return fetchPage(url);
-}
-
-function pickTracks(pool, count, eraYear, wantClassic) {
-  var filtered = pool.filter(function(t) {
-    return wantClassic ? t.year < eraYear : t.year >= eraYear;
-  });
-  if (filtered.length === 0) {
-    // Fallback si pas assez de titres de cette ère
-    filtered = pool.slice();
-  }
-  var result = [];
-  for (var i = 0; i < count; i++) {
-    result.push(filtered[i % filtered.length]);
-  }
-  return result;
 }
 
 function generatePlaylist() {
   if (!accessToken) return;
-
-  // Validation
-  var valid = true;
-  ['s','b','k'].forEach(function(x) {
-    var n = parseInt(document.getElementById('nb-' + x).value) || 0;
-    var c = parseInt(document.getElementById('cl-' + x).value) || 0;
-    var r = parseInt(document.getElementById('re-' + x).value) || 0;
-    if (c + r !== n) valid = false;
-  });
-  if (!valid) { alert('Classiques + Récents doit être égal au Total pour chaque genre.'); return; }
-
   var btn = document.getElementById('gen-btn');
   btn.disabled = true;
 
@@ -417,13 +442,30 @@ function generatePlaylist() {
   var nbK = parseInt(document.getElementById('nb-k').value);
   var clK = parseInt(document.getElementById('cl-k').value);
   var reK = parseInt(document.getElementById('re-k').value);
+  var nbKo = parseInt(document.getElementById('nb-ko').value);
+  var clKo = parseInt(document.getElementById('cl-ko').value);
+  var reKo = parseInt(document.getElementById('re-ko').value);
 
-  var perRot = nbS + nbB + nbK;
-  var rotations = Math.ceil((duree * 60 / 4) / perRot);
+  var startMin = timeToMinutes(document.getElementById('time-start').value);
+  var konpaMin = timeToMinutes(document.getElementById('time-konpa').value);
+  var konpaOffset = konpaMin - startMin;
+  if (konpaOffset < 0) konpaOffset += 1440;
+
+  var perRotSBK = nbS + nbB + nbK;
+  var avgTrack = 4;
+  var rotDurSBK = perRotSBK * avgTrack;
+  var rotDurKO = nbKo * avgTrack;
+  var totalMin = duree * 60;
+
+  var sbkRotations = Math.floor(konpaOffset / rotDurSBK);
+  var sbkDur = sbkRotations * rotDurSBK;
+  var koDur = totalMin - sbkDur;
+  var koRotations = Math.ceil(koDur / rotDurKO);
 
   var idS = extractId(document.getElementById('src-s').value);
   var idB = extractId(document.getElementById('src-b').value);
   var idK = extractId(document.getElementById('src-k').value);
+  var idKo = extractId(document.getElementById('src-ko').value);
 
   document.getElementById('progress-section').style.display = 'block';
   document.getElementById('result-section').style.display = 'none';
@@ -431,84 +473,102 @@ function generatePlaylist() {
   document.getElementById('tracks-preview').innerHTML = '';
   setProgress(0);
 
-  log('🎵 Chargement playlist Salsa…', 'info');
+  log('🎵 Chargement Salsa…', 'info');
   loadPlaylist(idS).then(function(sAll) {
-    var sClassic = shuffle(sAll.filter(function(t){ return t.year < eraYear; }));
-    var sRecent  = shuffle(sAll.filter(function(t){ return t.year >= eraYear; }));
-    log('✓ Salsa : ' + sClassic.length + ' classiques / ' + sRecent.length + ' récents', 'ok');
+    var sC = shuffle(sAll.filter(function(t){ return t.year < eraYear; }));
+    var sR = shuffle(sAll.filter(function(t){ return t.year >= eraYear; }));
+    log('✓ Salsa : ' + sC.length + ' classiques / ' + sR.length + ' récents', 'ok');
     setProgress(10);
-
-    log('🎵 Chargement playlist Bachata…', 'info');
     return loadPlaylist(idB).then(function(bAll) {
-      var bClassic = shuffle(bAll.filter(function(t){ return t.year < eraYear; }));
-      var bRecent  = shuffle(bAll.filter(function(t){ return t.year >= eraYear; }));
-      log('✓ Bachata : ' + bClassic.length + ' classiques / ' + bRecent.length + ' récents', 'ok');
+      var bC = shuffle(bAll.filter(function(t){ return t.year < eraYear; }));
+      var bR = shuffle(bAll.filter(function(t){ return t.year >= eraYear; }));
+      log('✓ Bachata : ' + bC.length + ' classiques / ' + bR.length + ' récents', 'ok');
       setProgress(20);
-
-      log('🎵 Chargement playlist Kizomba…', 'info');
       return loadPlaylist(idK).then(function(kAll) {
-        var kClassic = shuffle(kAll.filter(function(t){ return t.year < eraYear; }));
-        var kRecent  = shuffle(kAll.filter(function(t){ return t.year >= eraYear; }));
-        log('✓ Kizomba : ' + kClassic.length + ' classiques / ' + kRecent.length + ' récents', 'ok');
+        var kC = shuffle(kAll.filter(function(t){ return t.year < eraYear; }));
+        var kR = shuffle(kAll.filter(function(t){ return t.year >= eraYear; }));
+        log('✓ Kizomba : ' + kC.length + ' classiques / ' + kR.length + ' récents', 'ok');
         setProgress(30);
 
-        // Construction des rotations
-        var list = [];
-        for (var r = 0; r < rotations; r++) {
-          // Salsa
-          for (var i = 0; i < clS; i++) list.push({ g:'S', track: sClassic[(r*clS+i) % (sClassic.length||1)] });
-          for (var i = 0; i < reS; i++) list.push({ g:'S', track: sRecent[(r*reS+i) % (sRecent.length||1)] });
-          // Bachata
-          for (var i = 0; i < clB; i++) list.push({ g:'B', track: bClassic[(r*clB+i) % (bClassic.length||1)] });
-          for (var i = 0; i < reB; i++) list.push({ g:'B', track: bRecent[(r*reB+i) % (bRecent.length||1)] });
-          // Kizomba
-          for (var i = 0; i < clK; i++) list.push({ g:'K', track: kClassic[(r*clK+i) % (kClassic.length||1)] });
-          for (var i = 0; i < reK; i++) list.push({ g:'K', track: kRecent[(r*reK+i) % (kRecent.length||1)] });
-        }
-
-        log('📋 ' + rotations + ' rotations · ' + list.length + ' titres', 'info');
-        log('🔨 Création de la playlist…', 'info');
-
-        return fetch('https://api.spotify.com/v1/me/playlists', {
-          method: 'POST',
-          headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: name, description: 'Playlist SBK ANWA DJ — ' + new Date().toLocaleDateString('fr-FR'), public: true })
-        }).then(function(r) { return r.json(); }).then(function(pl) {
-          if (!pl.id) { log('❌ Erreur : ' + JSON.stringify(pl), 'err'); btn.disabled = false; return; }
-          log('✓ Playlist "' + name + '" créée', 'ok');
+        var koPromise = idKo ? loadPlaylist(idKo) : Promise.resolve([]);
+        return koPromise.then(function(koAll) {
+          var koC = shuffle(koAll.filter(function(t){ return t.year < eraYear; }));
+          var koR = shuffle(koAll.filter(function(t){ return t.year >= eraYear; }));
+          if (idKo) log('✓ Konpa : ' + koC.length + ' classiques / ' + koR.length + ' récents', 'ko');
           setProgress(40);
 
-          var uris = [];
-          list.forEach(function(item) {
-            if (item.track) {
-              uris.push(item.track.uri);
-              addTrackPreview(item.g, item.track.name, item.track.artist, item.track.year, eraYear);
-            }
-          });
-          setProgress(80);
+          // Construction de la liste
+          var list = [];
+          var currentMin = startMin;
 
-          var batches = [];
-          for (var i = 0; i < uris.length; i += 100) batches.push(uris.slice(i, i+100));
-
-          function addBatch(idx) {
-            if (idx >= batches.length) return Promise.resolve();
-            return fetch('https://api.spotify.com/v1/playlists/' + pl.id + '/tracks', {
-              method: 'POST',
-              headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ uris: batches[idx] })
-            }).then(function(r) { return r.json(); }).then(function(d) {
-              if (d.error) log('❌ ' + d.error.message, 'err');
-              return addBatch(idx+1);
-            });
+          // Phase SBK
+          log('📋 Phase SBK : ' + sbkRotations + ' rotations', 'info');
+          for (var r = 0; r < sbkRotations; r++) {
+            for (var i = 0; i < clS; i++) list.push({ g:'S', track: sC[(r*clS+i)%(sC.length||1)], min: currentMin + (list.length * avgTrack) });
+            for (var i = 0; i < reS; i++) list.push({ g:'S', track: sR[(r*reS+i)%(sR.length||1)], min: currentMin + (list.length * avgTrack) });
+            for (var i = 0; i < clB; i++) list.push({ g:'B', track: bC[(r*clB+i)%(bC.length||1)], min: currentMin + (list.length * avgTrack) });
+            for (var i = 0; i < reB; i++) list.push({ g:'B', track: bR[(r*reB+i)%(bR.length||1)], min: currentMin + (list.length * avgTrack) });
+            for (var i = 0; i < clK; i++) list.push({ g:'K', track: kC[(r*clK+i)%(kC.length||1)], min: currentMin + (list.length * avgTrack) });
+            for (var i = 0; i < reK; i++) list.push({ g:'K', track: kR[(r*reK+i)%(kR.length||1)], min: currentMin + (list.length * avgTrack) });
           }
 
-          return addBatch(0).then(function() {
-            setProgress(100);
-            log('🎉 ' + uris.length + ' titres ajoutés !', 'ok');
-            document.getElementById('result-section').style.display = 'block';
-            document.getElementById('result-desc').textContent = uris.length + ' titres · ' + rotations + ' rotations SBK · ~' + duree + 'h';
-            document.getElementById('result-link').href = pl.external_urls ? pl.external_urls.spotify : '#';
-            btn.disabled = false;
+          // Phase Konpa
+          if (koAll.length > 0) {
+            log('🎺 Phase Konpa : ' + koRotations + ' rotations', 'ko');
+            for (var r = 0; r < koRotations; r++) {
+              for (var i = 0; i < clKo; i++) list.push({ g:'KO', track: koC[(r*clKo+i)%(koC.length||1)], min: currentMin + (list.length * avgTrack) });
+              for (var i = 0; i < reKo; i++) list.push({ g:'KO', track: koR[(r*reKo+i)%(koR.length||1)], min: currentMin + (list.length * avgTrack) });
+            }
+          } else {
+            log('⚠ Pas de playlist Konpa — phase ignorée', 'err');
+          }
+
+          log('🔨 Création de la playlist…', 'info');
+          return fetch('https://api.spotify.com/v1/me/playlists', {
+            method: 'POST',
+            headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: name, description: 'Playlist ANWA DJ — ' + new Date().toLocaleDateString('fr-FR'), public: true })
+          }).then(function(r) { return r.json(); }).then(function(pl) {
+            if (!pl.id) { log('❌ Erreur création : ' + JSON.stringify(pl), 'err'); btn.disabled = false; return; }
+            log('✓ Playlist "' + name + '" créée', 'ok');
+            setProgress(50);
+
+            var uris = [];
+            list.forEach(function(item) {
+              if (item.track) {
+                uris.push(item.track.uri);
+                var trackMin = ((item.min % 1440) + 1440) % 1440;
+                var h = Math.floor(trackMin / 60) % 24;
+                var m = trackMin % 60;
+                var timeStr = (h < 10 ? '0' : '') + h + 'h' + (m < 10 ? '0' : '') + m;
+                addTrackPreview(item.g, item.track.name, item.track.artist, item.track.year, eraYear, timeStr);
+              }
+            });
+            setProgress(80);
+
+            var batches = [];
+            for (var i = 0; i < uris.length; i += 100) batches.push(uris.slice(i, i+100));
+
+            function addBatch(idx) {
+              if (idx >= batches.length) return Promise.resolve();
+              return fetch('https://api.spotify.com/v1/playlists/' + pl.id + '/tracks', {
+                method: 'POST',
+                headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ uris: batches[idx] })
+              }).then(function(r) { return r.json(); }).then(function(d) {
+                if (d.error) log('❌ ' + d.error.message, 'err');
+                return addBatch(idx + 1);
+              });
+            }
+
+            return addBatch(0).then(function() {
+              setProgress(100);
+              log('🎉 ' + uris.length + ' titres ajoutés !', 'ok');
+              document.getElementById('result-section').style.display = 'block';
+              document.getElementById('result-desc').textContent = uris.length + ' titres · SBK jusqu\'à ' + minutesToTime(startMin + sbkDur) + ' · Konpa ensuite · ~' + duree + 'h';
+              document.getElementById('result-link').href = pl.external_urls ? pl.external_urls.spotify : '#';
+              btn.disabled = false;
+            });
           });
         });
       });
@@ -519,7 +579,6 @@ function generatePlaylist() {
   });
 }
 
-// Init
 document.getElementById('connect-btn').addEventListener('click', function() {
   var token = document.getElementById('manual-token').value.trim();
   if (!token) { alert('Colle un token valide.'); return; }
@@ -535,6 +594,7 @@ document.getElementById('gen-btn').addEventListener('click', function() {
 window.addEventListener('load', function() {
   var saved = sessionStorage.getItem('spotify_token');
   if (saved) { accessToken = saved; loadUser(); }
+  else { updateTimeline(); }
 });
 </script>
 </body>
