@@ -452,6 +452,13 @@ async function generatePlaylist() {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 window.addEventListener('load', async () => {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  if (code) {
+    window.history.replaceState({}, document.title, window.location.pathname);
+    await exchangeCode(code);
+    return;
+  }
   const saved = sessionStorage.getItem('spotify_token');
   if (saved) { accessToken = saved; await loadUser(); }
 });
