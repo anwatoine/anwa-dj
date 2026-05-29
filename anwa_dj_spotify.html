@@ -222,7 +222,7 @@
 <script>
 const CLIENT_ID = '8d38f9416611475b9108189802c111f8';
 const REDIRECT_URI = 'https://anwatoine.github.io/anwa-dj/anwa_dj_spotify.html';
-const SCOPES = 'playlist-modify-public playlist-modify-private user-read-private user-read-email';
+const SCOPES = 'playlist-modify-public playlist-modify-private user-read-private user-read-email ugc-image-upload';
 
 const CATALOGUE = {
   S: [
@@ -413,7 +413,7 @@ async function generatePlaylist() {
   const cRes = await fetch(`https://api.spotify.com/v1/me/playlists`, {
     method: 'POST',
     headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, description: `Playlist SBK ANWA DJ — ${new Date().toLocaleDateString('fr-FR')}`, public: false })
+    body: JSON.stringify({ name, description: `Playlist SBK ANWA DJ — ${new Date().toLocaleDateString('fr-FR')}`, public: true })
   });
   const pl = await cRes.json();
   log(`✓ Playlist "${name}" créée`, 'ok');
