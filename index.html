@@ -114,7 +114,6 @@
 </head>
 <body>
 <div class="app">
-
   <header>
     <div class="logo">
       <div class="logo-icon">
@@ -135,23 +134,14 @@
     </div>
   </header>
 
-  <!-- CHARGEMENT -->
   <section id="loading-section">
-    <div class="card">
-      <div class="loading-box">
-        <div class="spinner"></div>
-        Connexion en cours…
-      </div>
-    </div>
+    <div class="card"><div class="loading-box"><div class="spinner"></div>Connexion en cours…</div></div>
   </section>
 
-  <!-- CONNEXION -->
   <section id="connect-section" class="hidden">
     <div class="section-title">Connexion Spotify</div>
     <div class="card">
-      <p style="font-size:14px;color:var(--muted);margin-bottom:1.25rem;line-height:1.6">
-        Connecte ton compte Spotify pour générer tes playlists SBK directement depuis cet outil.
-      </p>
+      <p style="font-size:14px;color:var(--muted);margin-bottom:1.25rem;line-height:1.6">Connecte ton compte Spotify pour générer tes playlists directement.</p>
       <button class="btn-green" id="connect-btn">
         <svg viewBox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
         Se connecter avec Spotify
@@ -159,24 +149,15 @@
     </div>
   </section>
 
-  <!-- CONFIG -->
   <section id="config-section" class="hidden">
     <div class="section-title">Configuration de la playlist</div>
     <div class="card">
-
       <div class="config-grid">
-        <div>
-          <label>Nom de la playlist</label>
-          <input type="text" id="playlist-name" value="ANWA SBK — Soirée BS Event"/>
-        </div>
-        <div>
-          <label>Durée totale de la soirée</label>
+        <div><label>Nom de la playlist</label><input type="text" id="playlist-name" value="ANWA SBK — Soirée BS Event"/></div>
+        <div><label>Durée totale de la soirée</label>
           <select id="duree">
-            <option value="2">2 heures</option>
-            <option value="3">3 heures</option>
-            <option value="4" selected>4 heures</option>
-            <option value="5">5 heures</option>
-            <option value="6">6 heures</option>
+            <option value="2">2 heures</option><option value="3">3 heures</option>
+            <option value="4" selected>4 heures</option><option value="5">5 heures</option><option value="6">6 heures</option>
           </select>
         </div>
       </div>
@@ -191,64 +172,28 @@
 
       <div class="section-title">Répartition SBK par rotation</div>
       <table class="genre-table">
-        <thead>
-          <tr>
-            <th>Genre</th>
-            <th>Total / rotation</th>
-            <th>Classiques<br><span style="font-weight:400;font-size:10px">(avant seuil)</span></th>
-            <th>Récents<br><span style="font-weight:400;font-size:10px;color:var(--green)">(après seuil)</span></th>
-          </tr>
-        </thead>
+        <thead><tr>
+          <th>Genre</th><th>Total/rotation</th>
+          <th>Classiques<br><span style="font-weight:400;font-size:10px">(avant seuil)</span></th>
+          <th>Récents<br><span style="font-weight:400;font-size:10px;color:var(--green)">(après seuil)</span></th>
+        </tr></thead>
         <tbody>
-          <tr>
-            <td><div class="genre-label"><div class="genre-dot s"></div>Salsa</div></td>
-            <td><input type="number" id="nb-s" value="3" min="1" max="8" oninput="updateTimeline()"></td>
-            <td><input type="number" id="cl-s" value="1" min="0" max="8"></td>
-            <td><input type="number" id="re-s" value="2" min="0" max="8"></td>
-          </tr>
-          <tr>
-            <td><div class="genre-label"><div class="genre-dot b"></div>Bachata</div></td>
-            <td><input type="number" id="nb-b" value="3" min="1" max="8" oninput="updateTimeline()"></td>
-            <td><input type="number" id="cl-b" value="1" min="0" max="8"></td>
-            <td><input type="number" id="re-b" value="2" min="0" max="8"></td>
-          </tr>
-          <tr>
-            <td><div class="genre-label"><div class="genre-dot k"></div>Kizomba</div></td>
-            <td><input type="number" id="nb-k" value="3" min="1" max="8" oninput="updateTimeline()"></td>
-            <td><input type="number" id="cl-k" value="1" min="0" max="8"></td>
-            <td><input type="number" id="re-k" value="2" min="0" max="8"></td>
-          </tr>
+          <tr><td><div class="genre-label"><div class="genre-dot s"></div>Salsa</div></td><td><input type="number" id="nb-s" value="3" min="1" max="8" oninput="updateTimeline()"></td><td><input type="number" id="cl-s" value="1" min="0" max="8"></td><td><input type="number" id="re-s" value="2" min="0" max="8"></td></tr>
+          <tr><td><div class="genre-label"><div class="genre-dot b"></div>Bachata</div></td><td><input type="number" id="nb-b" value="3" min="1" max="8" oninput="updateTimeline()"></td><td><input type="number" id="cl-b" value="1" min="0" max="8"></td><td><input type="number" id="re-b" value="2" min="0" max="8"></td></tr>
+          <tr><td><div class="genre-label"><div class="genre-dot k"></div>Kizomba</div></td><td><input type="number" id="nb-k" value="3" min="1" max="8" oninput="updateTimeline()"></td><td><input type="number" id="cl-k" value="1" min="0" max="8"></td><td><input type="number" id="re-k" value="2" min="0" max="8"></td></tr>
         </tbody>
       </table>
 
       <div class="konpa-box">
         <div class="section-title">🎺 Phase Konpa</div>
         <div class="time-grid">
-          <div>
-            <label>Heure de début de soirée</label>
-            <input type="time" id="time-start" value="23:00" oninput="updateTimeline()"/>
-          </div>
-          <div>
-            <label>Heure de début du Konpa</label>
-            <input type="time" id="time-konpa" value="02:15" oninput="updateTimeline()"/>
-          </div>
+          <div><label>Heure de début de soirée</label><input type="time" id="time-start" value="23:00" oninput="updateTimeline()"/></div>
+          <div><label>Heure de début du Konpa</label><input type="time" id="time-konpa" value="02:15" oninput="updateTimeline()"/></div>
         </div>
         <table class="genre-table" style="margin-bottom:1rem">
-          <thead>
-            <tr>
-              <th>Genre</th>
-              <th>Total / rotation</th>
-              <th>Classiques</th>
-              <th>Récents</th>
-            </tr>
-          </thead>
+          <thead><tr><th>Genre</th><th>Total/rotation</th><th>Classiques</th><th>Récents</th></tr></thead>
           <tbody>
-            <tr>
-              <td><div class="genre-label"><div class="genre-dot ko"></div>Konpa</div></td>
-              <td><input type="number" id="nb-ko" value="3" min="1" max="8" oninput="updateTimeline()"></td>
-              <td><input type="number" id="cl-ko" value="1" min="0" max="8"></td>
-              <td><input type="number" id="re-ko" value="2" min="0" max="8"></td>
-            </tr>
+            <tr><td><div class="genre-label"><div class="genre-dot ko"></div>Konpa</div></td><td><input type="number" id="nb-ko" value="3" min="1" max="8" oninput="updateTimeline()"></td><td><input type="number" id="cl-ko" value="1" min="0" max="8"></td><td><input type="number" id="re-ko" value="2" min="0" max="8"></td></tr>
           </tbody>
         </table>
         <div class="timeline-preview" id="timeline-preview">Aperçu de la timeline…</div>
@@ -272,7 +217,6 @@
     </div>
   </section>
 
-  <!-- PROGRESS -->
   <section id="progress-section">
     <div class="section-title">Génération en cours…</div>
     <div class="card">
@@ -282,7 +226,6 @@
     </div>
   </section>
 
-  <!-- RESULT -->
   <section id="result-section">
     <div class="result-card">
       <h3>🎉 Playlist créée !</h3>
@@ -293,93 +236,74 @@
       </a>
     </div>
   </section>
-
 </div>
 
 <script>
 var CLIENT_ID = '8d38f9416611475b9108189802c111f8';
 var REDIRECT_URI = 'https://dj.anwadance.com';
 var SCOPES = 'playlist-modify-public playlist-modify-private user-read-private user-read-email';
+var TOKEN_ENDPOINT = 'https://dj.anwadance.com/callback.php';
 var accessToken = null;
-var userId = null;
 
-// ── PKCE ─────────────────────────────────────────────────────────────────────
 function rnd(len) {
   var a = new Uint8Array(len);
   crypto.getRandomValues(a);
   return Array.from(a, function(b){ return ('0'+b.toString(16)).slice(-2); }).join('');
 }
 function b64url(buf) {
-  return btoa(String.fromCharCode.apply(null, new Uint8Array(buf)))
-    .replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  return btoa(String.fromCharCode.apply(null, new Uint8Array(buf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 }
+
 async function connectSpotify() {
   var verifier = rnd(64);
   sessionStorage.setItem('pkce_v', verifier);
   var hashed = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier));
   var challenge = b64url(hashed);
-  var url = 'https://accounts.spotify.com/authorize?' + new URLSearchParams({
-    response_type: 'code',
-    client_id: CLIENT_ID,
-    scope: SCOPES,
-    redirect_uri: REDIRECT_URI,
-    code_challenge_method: 'S256',
-    code_challenge: challenge
+  window.location.href = 'https://accounts.spotify.com/authorize?' + new URLSearchParams({
+    response_type: 'code', client_id: CLIENT_ID, scope: SCOPES,
+    redirect_uri: REDIRECT_URI, code_challenge_method: 'S256', code_challenge: challenge
   });
-  window.location.href = url;
 }
 
 async function exchangeCode(code) {
   var verifier = sessionStorage.getItem('pkce_v');
-  var res = await fetch('https://accounts.spotify.com/api/token', {
+  var res = await fetch(TOKEN_ENDPOINT, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'authorization_code',
-      code: code,
-      redirect_uri: REDIRECT_URI,
-      client_id: CLIENT_ID,
-      code_verifier: verifier
-    })
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ grant_type: 'authorization_code', code: code, code_verifier: verifier })
   });
   var data = await res.json();
   if (!data.access_token) { showConnect(); return; }
-  accessToken = data.access_token;
-  // Stocker token + expiration
-  var exp = Date.now() + (data.expires_in * 1000);
-  sessionStorage.setItem('spotify_token', accessToken);
-  sessionStorage.setItem('spotify_exp', exp.toString());
-  if (data.refresh_token) sessionStorage.setItem('spotify_refresh', data.refresh_token);
+  saveToken(data);
   await loadUser();
 }
 
-async function refreshToken() {
-  var refresh = sessionStorage.getItem('spotify_refresh');
+async function doRefresh() {
+  var refresh = localStorage.getItem('spotify_refresh');
   if (!refresh) return false;
-  var res = await fetch('https://accounts.spotify.com/api/token', {
+  var res = await fetch(TOKEN_ENDPOINT, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'refresh_token',
-      refresh_token: refresh,
-      client_id: CLIENT_ID
-    })
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ grant_type: 'refresh_token', refresh_token: refresh })
   });
   var data = await res.json();
   if (!data.access_token) return false;
+  saveToken(data);
+  return true;
+}
+
+function saveToken(data) {
   accessToken = data.access_token;
   var exp = Date.now() + (data.expires_in * 1000);
-  sessionStorage.setItem('spotify_token', accessToken);
-  sessionStorage.setItem('spotify_exp', exp.toString());
-  if (data.refresh_token) sessionStorage.setItem('spotify_refresh', data.refresh_token);
-  return true;
+  localStorage.setItem('spotify_token', accessToken);
+  localStorage.setItem('spotify_exp', exp.toString());
+  if (data.refresh_token) localStorage.setItem('spotify_refresh', data.refresh_token);
 }
 
 function showConnect() {
   document.getElementById('loading-section').classList.add('hidden');
   document.getElementById('connect-section').classList.remove('hidden');
 }
-
 function showConfig() {
   document.getElementById('loading-section').classList.add('hidden');
   document.getElementById('connect-section').classList.add('hidden');
@@ -389,16 +313,12 @@ function showConfig() {
 
 async function loadUser() {
   try {
-    var res = await fetch('https://api.spotify.com/v1/me', {
-      headers: { Authorization: 'Bearer ' + accessToken }
-    });
+    var res = await fetch('https://api.spotify.com/v1/me', { headers: { Authorization: 'Bearer ' + accessToken } });
     var data = await res.json();
     if (!data.id) { showConnect(); return; }
-    userId = data.id;
     document.getElementById('status-dot').classList.add('connected');
     document.getElementById('status-text').style.display = 'none';
-    var ui = document.getElementById('user-info');
-    ui.style.display = 'flex';
+    var ui = document.getElementById('user-info'); ui.style.display = 'flex';
     if (data.images && data.images.length > 0) document.getElementById('user-avatar').src = data.images[0].url;
     else document.getElementById('user-avatar').style.display = 'none';
     document.getElementById('user-name').textContent = data.display_name || data.id;
@@ -406,86 +326,71 @@ async function loadUser() {
   } catch(e) { showConnect(); }
 }
 
-// ── Timeline ──────────────────────────────────────────────────────────────────
-function timeToMinutes(t) {
-  var p = t.split(':');
-  return parseInt(p[0]) * 60 + parseInt(p[1]);
-}
+function timeToMinutes(t) { var p=t.split(':'); return parseInt(p[0])*60+parseInt(p[1]); }
 function minutesToTime(m) {
-  m = ((m % 1440) + 1440) % 1440;
-  var h = Math.floor(m / 60) % 24;
-  var mn = m % 60;
+  m=((m%1440)+1440)%1440; var h=Math.floor(m/60)%24, mn=m%60;
   return (h<10?'0':'')+h+'h'+(mn<10?'0':'')+mn;
 }
 function updateTimeline() {
-  var startMin = timeToMinutes(document.getElementById('time-start').value);
-  var konpaMin = timeToMinutes(document.getElementById('time-konpa').value);
-  var duree = parseInt(document.getElementById('duree').value) * 60;
-  var konpaOffset = konpaMin - startMin;
-  if (konpaOffset < 0) konpaOffset += 1440;
-  var nbS = parseInt(document.getElementById('nb-s').value)||3;
-  var nbB = parseInt(document.getElementById('nb-b').value)||3;
-  var nbK = parseInt(document.getElementById('nb-k').value)||3;
-  var nbKo = parseInt(document.getElementById('nb-ko').value)||3;
-  var perRotSBK = nbS + nbB + nbK;
-  var rotDurSBK = perRotSBK * 4;
-  var rotDurKO = nbKo * 4;
-  var sbkRotations = Math.floor(konpaOffset / rotDurSBK);
-  var sbkDur = sbkRotations * rotDurSBK;
-  var koDur = duree - sbkDur;
-  var koRotations = Math.ceil(koDur / rotDurKO);
-  document.getElementById('timeline-preview').innerHTML =
-    '<span class="sbk">● SBK</span> ' + minutesToTime(startMin) + ' → ' + minutesToTime(startMin + sbkDur) +
-    ' (' + sbkRotations + ' rotations · ' + (sbkRotations*perRotSBK) + ' titres)<br>' +
-    '<span class="ko">● KONPA</span> ' + minutesToTime(startMin+sbkDur) + ' → ' + minutesToTime(startMin+duree) +
-    ' (' + koRotations + ' rotations · ' + (koRotations*nbKo) + ' titres)';
+  var s=timeToMinutes(document.getElementById('time-start').value);
+  var k=timeToMinutes(document.getElementById('time-konpa').value);
+  var d=parseInt(document.getElementById('duree').value)*60;
+  var off=k-s; if(off<0)off+=1440;
+  var ns=parseInt(document.getElementById('nb-s').value)||3;
+  var nb=parseInt(document.getElementById('nb-b').value)||3;
+  var nk=parseInt(document.getElementById('nb-k').value)||3;
+  var nko=parseInt(document.getElementById('nb-ko').value)||3;
+  var per=ns+nb+nk, rotS=Math.floor(off/(per*4)), durS=rotS*per*4;
+  var rotK=Math.ceil((d-durS)/(nko*4));
+  document.getElementById('timeline-preview').innerHTML=
+    '<span class="sbk">● SBK</span> '+minutesToTime(s)+' → '+minutesToTime(s+durS)+' ('+rotS+' rotations · '+(rotS*per)+' titres)<br>'+
+    '<span class="ko">● KONPA</span> '+minutesToTime(s+durS)+' → '+minutesToTime(s+d)+' ('+rotK+' rotations · '+(rotK*nko)+' titres)';
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-function extractId(val) {
-  val = val.trim();
-  var m = val.match(/playlist\/([a-zA-Z0-9]+)/);
-  return m ? m[1] : val;
+function extractId(v) { v=v.trim(); var m=v.match(/playlist\/([a-zA-Z0-9]+)/); return m?m[1]:v; }
+function log(msg,type) {
+  var d=document.createElement('div'); d.className='log-line '+(type||'info'); d.textContent=msg;
+  document.getElementById('progress-log').appendChild(d); d.scrollIntoView({behavior:'smooth'});
 }
-function log(msg, type) {
-  var d = document.createElement('div');
-  d.className = 'log-line ' + (type||'info');
-  d.textContent = msg;
-  document.getElementById('progress-log').appendChild(d);
-  d.scrollIntoView({behavior:'smooth'});
-}
-function setProgress(p) { document.getElementById('progress-bar').style.width = p+'%'; }
+function setProgress(p) { document.getElementById('progress-bar').style.width=p+'%'; }
 function shuffle(arr) {
-  var a = arr.slice();
-  for (var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}
+  var a=arr.slice();
+  for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}
   return a;
 }
-function addTrackPreview(g, title, artist, year, eraYear, timeStr) {
-  var isRecent = year >= eraYear;
-  var el = document.createElement('div');
-  el.className = 'track-item';
-  el.innerHTML = '<span class="track-badge '+g+'">'+g+'</span>' +
-    '<div style="flex:1"><div class="track-name">'+title+'</div><div class="track-artist">'+artist+'</div></div>' +
-    '<span class="track-year '+(isRecent?'recent':'classic')+'">'+year+'</span>' +
+function addTrackPreview(g,title,artist,year,eraYear,timeStr) {
+  var el=document.createElement('div'); el.className='track-item';
+  el.innerHTML='<span class="track-badge '+g+'">'+g+'</span>'+
+    '<div style="flex:1"><div class="track-name">'+title+'</div><div class="track-artist">'+artist+'</div></div>'+
+    '<span class="track-year '+(year>=eraYear?'recent':'classic')+'">'+year+'</span>'+
     '<span class="track-time">'+timeStr+'</span>';
   document.getElementById('tracks-preview').appendChild(el);
 }
 
+async function ensureToken() {
+  var exp=parseInt(localStorage.getItem('spotify_exp')||'0');
+  if (Date.now() > exp - 60000) {
+    var ok = await doRefresh();
+    if (!ok) { showConnect(); return false; }
+  }
+  return true;
+}
+
 function loadPlaylist(id) {
-  var tracks = [];
+  var tracks=[];
   function fetchPage(url) {
-    return fetch(url, {headers:{Authorization:'Bearer '+accessToken}})
+    return fetch(url,{headers:{Authorization:'Bearer '+accessToken}})
       .then(function(r){return r.json();})
       .then(function(data){
-        if (data.items) {
+        if(data.items){
           data.items.forEach(function(item){
-            if (item.track && item.track.uri && item.track.uri.indexOf('spotify:track:')===0) {
-              var rd = item.track.album ? item.track.album.release_date : '0000';
-              tracks.push({uri:item.track.uri, name:item.track.name, artist:item.track.artists[0]?item.track.artists[0].name:'', year:parseInt(rd.substring(0,4))||0});
+            if(item.track&&item.track.uri&&item.track.uri.indexOf('spotify:track:')===0){
+              var rd=item.track.album?item.track.album.release_date:'0000';
+              tracks.push({uri:item.track.uri,name:item.track.name,artist:item.track.artists[0]?item.track.artists[0].name:'',year:parseInt(rd.substring(0,4))||0});
             }
           });
         }
-        if (data.next) return fetchPage(data.next);
+        if(data.next) return fetchPage(data.next);
         return tracks;
       });
   }
@@ -493,30 +398,20 @@ function loadPlaylist(id) {
 }
 
 async function generatePlaylist() {
-  // Refresh token si expiré
-  var exp = parseInt(sessionStorage.getItem('spotify_exp')||'0');
-  if (Date.now() > exp - 60000) {
-    var ok = await refreshToken();
-    if (!ok) { showConnect(); return; }
-  }
-
-  var btn = document.getElementById('gen-btn');
-  btn.disabled = true;
-
-  var name = document.getElementById('playlist-name').value || 'ANWA SBK';
-  var duree = parseInt(document.getElementById('duree').value);
-  var eraYear = parseInt(document.getElementById('era-year').value);
-  var nbS=parseInt(document.getElementById('nb-s').value), clS=parseInt(document.getElementById('cl-s').value), reS=parseInt(document.getElementById('re-s').value);
-  var nbB=parseInt(document.getElementById('nb-b').value), clB=parseInt(document.getElementById('cl-b').value), reB=parseInt(document.getElementById('re-b').value);
-  var nbK=parseInt(document.getElementById('nb-k').value), clK=parseInt(document.getElementById('cl-k').value), reK=parseInt(document.getElementById('re-k').value);
-  var nbKo=parseInt(document.getElementById('nb-ko').value), clKo=parseInt(document.getElementById('cl-ko').value), reKo=parseInt(document.getElementById('re-ko').value);
+  if (!await ensureToken()) return;
+  var btn=document.getElementById('gen-btn'); btn.disabled=true;
+  var name=document.getElementById('playlist-name').value||'ANWA SBK';
+  var duree=parseInt(document.getElementById('duree').value);
+  var eraYear=parseInt(document.getElementById('era-year').value);
+  var nbS=parseInt(document.getElementById('nb-s').value),clS=parseInt(document.getElementById('cl-s').value),reS=parseInt(document.getElementById('re-s').value);
+  var nbB=parseInt(document.getElementById('nb-b').value),clB=parseInt(document.getElementById('cl-b').value),reB=parseInt(document.getElementById('re-b').value);
+  var nbK=parseInt(document.getElementById('nb-k').value),clK=parseInt(document.getElementById('cl-k').value),reK=parseInt(document.getElementById('re-k').value);
+  var nbKo=parseInt(document.getElementById('nb-ko').value),clKo=parseInt(document.getElementById('cl-ko').value),reKo=parseInt(document.getElementById('re-ko').value);
   var startMin=timeToMinutes(document.getElementById('time-start').value);
   var konpaMin=timeToMinutes(document.getElementById('time-konpa').value);
-  var konpaOffset=konpaMin-startMin; if(konpaOffset<0)konpaOffset+=1440;
-  var perRotSBK=nbS+nbB+nbK;
-  var sbkRotations=Math.floor(konpaOffset/(perRotSBK*4));
-  var sbkDur=sbkRotations*perRotSBK*4;
-  var koRotations=Math.ceil((duree*60-sbkDur)/(nbKo*4));
+  var off=konpaMin-startMin; if(off<0)off+=1440;
+  var perSBK=nbS+nbB+nbK, sbkRot=Math.floor(off/(perSBK*4)), sbkDur=sbkRot*perSBK*4;
+  var koRot=Math.ceil((duree*60-sbkDur)/(nbKo*4));
   var idS=extractId(document.getElementById('src-s').value);
   var idB=extractId(document.getElementById('src-b').value);
   var idK=extractId(document.getElementById('src-k').value);
@@ -530,23 +425,23 @@ async function generatePlaylist() {
 
   try {
     log('🎵 Chargement Salsa…','info'); var sAll=await loadPlaylist(idS);
-    var sC=shuffle(sAll.filter(function(t){return t.year<eraYear;})), sR=shuffle(sAll.filter(function(t){return t.year>=eraYear;}));
+    var sC=shuffle(sAll.filter(function(t){return t.year<eraYear;})),sR=shuffle(sAll.filter(function(t){return t.year>=eraYear;}));
     log('✓ Salsa : '+sC.length+' classiques / '+sR.length+' récents','ok'); setProgress(10);
 
     log('🎵 Chargement Bachata…','info'); var bAll=await loadPlaylist(idB);
-    var bC=shuffle(bAll.filter(function(t){return t.year<eraYear;})), bR=shuffle(bAll.filter(function(t){return t.year>=eraYear;}));
+    var bC=shuffle(bAll.filter(function(t){return t.year<eraYear;})),bR=shuffle(bAll.filter(function(t){return t.year>=eraYear;}));
     log('✓ Bachata : '+bC.length+' classiques / '+bR.length+' récents','ok'); setProgress(20);
 
     log('🎵 Chargement Kizomba…','info'); var kAll=await loadPlaylist(idK);
-    var kC=shuffle(kAll.filter(function(t){return t.year<eraYear;})), kR=shuffle(kAll.filter(function(t){return t.year>=eraYear;}));
+    var kC=shuffle(kAll.filter(function(t){return t.year<eraYear;})),kR=shuffle(kAll.filter(function(t){return t.year>=eraYear;}));
     log('✓ Kizomba : '+kC.length+' classiques / '+kR.length+' récents','ok'); setProgress(30);
 
     log('🎺 Chargement Konpa…','ko'); var koAll=await loadPlaylist(idKo);
-    var koC=shuffle(koAll.filter(function(t){return t.year<eraYear;})), koR=shuffle(koAll.filter(function(t){return t.year>=eraYear;}));
+    var koC=shuffle(koAll.filter(function(t){return t.year<eraYear;})),koR=shuffle(koAll.filter(function(t){return t.year>=eraYear;}));
     log('✓ Konpa : '+koC.length+' classiques / '+koR.length+' récents','ok'); setProgress(40);
 
     var list=[];
-    for(var r=0;r<sbkRotations;r++){
+    for(var r=0;r<sbkRot;r++){
       for(var i=0;i<clS;i++) list.push({g:'S',track:sC[(r*clS+i)%(sC.length||1)]});
       for(var i=0;i<reS;i++) list.push({g:'S',track:sR[(r*reS+i)%(sR.length||1)]});
       for(var i=0;i<clB;i++) list.push({g:'B',track:bC[(r*clB+i)%(bC.length||1)]});
@@ -554,17 +449,17 @@ async function generatePlaylist() {
       for(var i=0;i<clK;i++) list.push({g:'K',track:kC[(r*clK+i)%(kC.length||1)]});
       for(var i=0;i<reK;i++) list.push({g:'K',track:kR[(r*reK+i)%(kR.length||1)]});
     }
-    for(var r=0;r<koRotations;r++){
+    for(var r=0;r<koRot;r++){
       for(var i=0;i<clKo;i++) list.push({g:'KO',track:koC[(r*clKo+i)%(koC.length||1)]});
       for(var i=0;i<reKo;i++) list.push({g:'KO',track:koR[(r*reKo+i)%(koR.length||1)]});
     }
 
-    log('📋 '+list.length+' titres · '+sbkRotations+' rotations SBK + '+koRotations+' rotations Konpa','info');
+    log('📋 '+list.length+' titres · '+sbkRot+' rotations SBK + '+koRot+' rotations Konpa','info');
     log('🔨 Création de la playlist…','info');
 
     var cr=await fetch('https://api.spotify.com/v1/me/playlists',{method:'POST',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},body:JSON.stringify({name:name,description:'Playlist ANWA DJ — '+new Date().toLocaleDateString('fr-FR'),public:true})});
     var pl=await cr.json();
-    if(!pl.id){log('❌ Erreur : '+JSON.stringify(pl),'err');btn.disabled=false;return;}
+    if(!pl.id){log('❌ Erreur création : '+JSON.stringify(pl),'err');btn.disabled=false;return;}
     log('✓ Playlist "'+name+'" créée','ok'); setProgress(50);
 
     var uris=[];
@@ -572,7 +467,7 @@ async function generatePlaylist() {
       if(item.track){
         uris.push(item.track.uri);
         var tm=((startMin+idx*4)%1440+1440)%1440;
-        var h=Math.floor(tm/60)%24, mn=tm%60;
+        var h=Math.floor(tm/60)%24,mn=tm%60;
         addTrackPreview(item.g,item.track.name,item.track.artist,item.track.year,eraYear,(h<10?'0':'')+h+'h'+(mn<10?'0':'')+mn);
       }
     });
@@ -590,40 +485,20 @@ async function generatePlaylist() {
     document.getElementById('result-desc').textContent=uris.length+' titres · SBK jusqu\'à '+minutesToTime(startMin+sbkDur)+' · Konpa ensuite · ~'+duree+'h';
     document.getElementById('result-link').href=pl.external_urls?pl.external_urls.spotify:'#';
     btn.disabled=false;
-  } catch(e) {
-    log('❌ Erreur : '+e.message,'err');
-    btn.disabled=false;
-  }
+  } catch(e) { log('❌ Erreur : '+e.message,'err'); btn.disabled=false; }
 }
 
-// ── Init ──────────────────────────────────────────────────────────────────────
 document.getElementById('connect-btn').addEventListener('click', connectSpotify);
 document.getElementById('gen-btn').addEventListener('click', generatePlaylist);
 
 window.addEventListener('load', async function() {
-  var params = new URLSearchParams(window.location.search);
-  var code = params.get('code');
-
-  if (code) {
-    window.history.replaceState({}, document.title, window.location.pathname);
-    await exchangeCode(code);
-    return;
-  }
-
-  var token = sessionStorage.getItem('spotify_token');
-  var exp = parseInt(sessionStorage.getItem('spotify_exp')||'0');
-
-  if (token && Date.now() < exp - 60000) {
-    accessToken = token;
-    await loadUser();
-    return;
-  }
-
-  if (sessionStorage.getItem('spotify_refresh')) {
-    var ok = await refreshToken();
-    if (ok) { await loadUser(); return; }
-  }
-
+  var params=new URLSearchParams(window.location.search);
+  var code=params.get('code');
+  if(code){ window.history.replaceState({},document.title,window.location.pathname); await exchangeCode(code); return; }
+  var token=localStorage.getItem('spotify_token');
+  var exp=parseInt(localStorage.getItem('spotify_exp')||'0');
+  if(token && Date.now()<exp-60000){ accessToken=token; await loadUser(); return; }
+  if(localStorage.getItem('spotify_refresh')){ var ok=await doRefresh(); if(ok){await loadUser();return;} }
   showConnect();
 });
 </script>
