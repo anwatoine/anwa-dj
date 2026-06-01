@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ANWA DJ — Spotify Playlist Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #1DB954; --green-dim: rgba(29,185,84,0.12);
+    --bg: #0a0a0a; --bg2: #111111; --bg3: #1a1a1a;
+    --border: rgba(255,255,255,0.07); --border-hover: rgba(29,185,84,0.4);
+    --text: #f0f0f0; --muted: #888;
+    --s-color: #3b82f6; --s-bg: rgba(59,130,246,0.12);
+    --b-color: #f59e0b; --b-bg: rgba(245,158,11,0.12);
+    --k-color: #a78bfa; --k-bg: rgba(167,139,250,0.12);
+    --ko-color: #f43f5e; --ko-bg: rgba(244,63,94,0.12);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image: linear-gradient(rgba(29,185,84,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(29,185,84,0.03) 1px, transparent 1px);
+    background-size: 40px 40px; pointer-events: none; z-index: 0;
+  }
+  .app { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+  header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 3rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 1rem; }
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-icon { width: 42px; height: 42px; background: var(--green); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .logo-icon svg { width: 22px; height: 22px; fill: #000; }
+  .logo-text { font-family: 'Space Mono', monospace; font-size: 18px; font-weight: 700; }
+  .logo-text span { color: var(--green); }
+  .logo-sub { font-size: 11px; color: var(--muted); margin-top: 2px; letter-spacing: .08em; text-transform: uppercase; }
+  section { margin-bottom: 2rem; }
+  .section-title { font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 1rem; }
+  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; }
+  .btn-green {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; padding: 14px; background: var(--green); color: #000;
+    font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600;
+    border: none; border-radius: 50px; cursor: pointer; transition: all .2s;
+  }
+  .btn-green:hover { background: #22d464; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(29,185,84,0.3); }
+  .btn-green:disabled { opacity: .4; cursor: not-allowed; transform: none; box-shadow: none; }
+  .btn-green svg { width: 20px; height: 20px; fill: #000; flex-shrink: 0; }
+  .config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; }
+  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  input[type="text"], input[type="number"], input[type="time"], select {
+    width: 100%; padding: 10px 14px; background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none; transition: border-color .2s;
+  }
+  input:focus, select:focus { border-color: var(--border-hover); }
+  select option { background: var(--bg3); }
+  .genre-table { width: 100%; border-collapse: collapse; margin-bottom: 1.25rem; }
+  .genre-table th { font-size: 11px; color: var(--muted); font-weight: 500; text-align: center; padding: 0 6px 10px; font-family: 'Space Mono', monospace; letter-spacing: .05em; text-transform: uppercase; }
+  .genre-table th:first-child { text-align: left; }
+  .genre-table td { padding: 6px; vertical-align: middle; text-align: center; }
+  .genre-table td:first-child { text-align: left; }
+  .genre-table td input[type="number"] { width: 58px; text-align: center; padding: 8px 4px; }
+  .genre-label { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
+  .genre-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .genre-dot.s { background: var(--s-color); }
+  .genre-dot.b { background: var(--b-color); }
+  .genre-dot.k { background: var(--k-color); }
+  .genre-dot.ko { background: var(--ko-color); }
+  .src-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .src-label { font-size: 13px; font-weight: 600; min-width: 80px; flex-shrink: 0; }
+  .konpa-box { background: rgba(244,63,94,0.06); border: 1px solid rgba(244,63,94,0.2); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem; }
+  .konpa-box .section-title { color: var(--ko-color); }
+  .time-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+  .timeline-preview { background: var(--bg3); border-radius: 10px; padding: 12px 14px; font-size: 12px; color: var(--muted); font-family: 'Space Mono', monospace; }
+  .timeline-preview span.sbk { color: var(--green); }
+  .timeline-preview span.ko { color: var(--ko-color); }
+  #progress-section { display: none; }
+  .progress-wrap { background: var(--bg3); border-radius: 50px; height: 6px; overflow: hidden; margin: 1rem 0; }
+  .progress-bar { height: 100%; background: var(--green); border-radius: 50px; width: 0%; transition: width .3s ease; }
+  #progress-log { font-size: 12px; font-family: 'Space Mono', monospace; max-height: 200px; overflow-y: auto; }
+  .log-line { padding: 3px 0; border-bottom: 1px solid var(--border); }
+  .log-line.ok { color: var(--green); }
+  .log-line.err { color: #f87171; }
+  .log-line.info { color: var(--muted); }
+  .log-line.ko { color: var(--ko-color); }
+  #result-section { display: none; }
+  .result-card { background: var(--green-dim); border: 1px solid rgba(29,185,84,0.3); border-radius: 16px; padding: 1.5rem; text-align: center; }
+  .result-card h3 { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
+  .result-card p { color: var(--muted); font-size: 14px; margin-bottom: 1.25rem; }
+  .btn-open { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: var(--green); color: #000; font-weight: 600; font-size: 14px; border-radius: 50px; text-decoration: none; }
+  #tracks-preview { margin-top: 1rem; }
+  .track-item { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+  .track-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 50px; flex-shrink: 0; }
+  .track-badge.S { background: var(--s-bg); color: var(--s-color); }
+  .track-badge.B { background: var(--b-bg); color: var(--b-color); }
+  .track-badge.K { background: var(--k-bg); color: var(--k-color); }
+  .track-badge.KO { background: var(--ko-bg); color: var(--ko-color); }
+  .track-name { font-size: 13px; font-weight: 500; flex: 1; }
+  .track-artist { font-size: 12px; color: var(--muted); }
+  .track-year { font-size: 11px; padding: 2px 7px; border-radius: 50px; flex-shrink: 0; }
+  .track-year.classic { background: rgba(255,255,255,0.07); color: var(--muted); }
+  .track-year.recent { background: var(--green-dim); color: var(--green); }
+  .track-time { font-size: 11px; color: var(--muted); min-width: 45px; text-align: right; flex-shrink: 0; }
+  #status-bar { display: flex; align-items: center; gap: 8px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
+  .dot.connected { background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{ opacity:1 } 50%{ opacity:.5 } }
+  #user-info { display: none; align-items: center; gap: 10px; }
+  #user-avatar { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--green); }
+  .hidden { display: none !important; }
+  .loading-box { text-align: center; padding: 3rem; color: var(--muted); font-size: 14px; }
+  .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--green); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 1rem; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 2px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+      </div>
+      <div>
+        <div class="logo-text">ANWA <span>DJ</span></div>
+        <div class="logo-sub">Playlist Generator — BS Event</div>
+      </div>
+    </div>
+    <div id="status-bar">
+      <div class="dot" id="status-dot"></div>
+      <span id="status-text" style="color:var(--muted);font-size:13px">Non connecté</span>
+      <div id="user-info">
+        <img id="user-avatar" src="" alt="">
+        <span id="user-name" style="font-size:13px;font-weight:500"></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- CHARGEMENT -->
+  <section id="loading-section">
+    <div class="card">
+      <div class="loading-box">
+        <div class="spinner"></div>
+        Connexion en cours…
+      </div>
+    </div>
+  </section>
+
+  <!-- CONNEXION -->
+  <section id="connect-section" class="hidden">
+    <div class="section-title">Connexion Spotify</div>
+    <div class="card">
+      <p style="font-size:14px;color:var(--muted);margin-bottom:1.25rem;line-height:1.6">
+        Connecte ton compte Spotify pour générer tes playlists SBK directement depuis cet outil.
+      </p>
+      <button class="btn-green" id="connect-btn">
+        <svg viewBox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+        Se connecter avec Spotify
+      </button>
+    </div>
+  </section>
+
+  <!-- CONFIG -->
+  <section id="config-section" class="hidden">
+    <div class="section-title">Configuration de la playlist</div>
+    <div class="card">
+
+      <div class="config-grid">
+        <div>
+          <label>Nom de la playlist</label>
+          <input type="text" id="playlist-name" value="ANWA SBK — Soirée BS Event"/>
+        </div>
+        <div>
+          <label>Durée totale de la soirée</label>
+          <select id="duree">
+            <option value="2">2 heures</option>
+            <option value="3">3 heures</option>
+            <option value="4" selected>4 heures</option>
+            <option value="5">5 heures</option>
+            <option value="6">6 heures</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="section-title">Playlists sources Spotify</div>
+      <div style="margin-bottom:1.25rem">
+        <div class="src-row"><span class="src-label" style="color:var(--s-color)">💃 Salsa</span><input type="text" id="src-s" value="6SzueO7QgQjoPicIO9Lkqn" placeholder="Lien ou ID"/></div>
+        <div class="src-row"><span class="src-label" style="color:var(--b-color)">🌹 Bachata</span><input type="text" id="src-b" value="2Ef6Ltu5hNVWmUySmwTUe1" placeholder="Lien ou ID"/></div>
+        <div class="src-row"><span class="src-label" style="color:var(--k-color)">🌙 Kizomba</span><input type="text" id="src-k" value="0O6sDyu0Ft8UCRkoMTmBp2" placeholder="Lien ou ID"/></div>
+        <div class="src-row"><span class="src-label" style="color:var(--ko-color)">🎺 Konpa</span><input type="text" id="src-ko" value="2RBapGnytZlnFLwMkcsdxt" placeholder="Lien ou ID"/></div>
+      </div>
+
+      <div class="section-title">Répartition SBK par rotation</div>
+      <table class="genre-table">
+        <thead>
+          <tr>
+            <th>Genre</th>
+            <th>Total / rotation</th>
+            <th>Classiques<br><span style="font-weight:400;font-size:10px">(avant seuil)</span></th>
+            <th>Récents<br><span style="font-weight:400;font-size:10px;color:var(--green)">(après seuil)</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><div class="genre-label"><div class="genre-dot s"></div>Salsa</div></td>
+            <td><input type="number" id="nb-s" value="3" min="1" max="8" oninput="updateTimeline()"></td>
+            <td><input type="number" id="cl-s" value="1" min="0" max="8"></td>
+            <td><input type="number" id="re-s" value="2" min="0" max="8"></td>
+          </tr>
+          <tr>
+            <td><div class="genre-label"><div class="genre-dot b"></div>Bachata</div></td>
+            <td><input type="number" id="nb-b" value="3" min="1" max="8" oninput="updateTimeline()"></td>
+            <td><input type="number" id="cl-b" value="1" min="0" max="8"></td>
+            <td><input type="number" id="re-b" value="2" min="0" max="8"></td>
+          </tr>
+          <tr>
+            <td><div class="genre-label"><div class="genre-dot k"></div>Kizomba</div></td>
+            <td><input type="number" id="nb-k" value="3" min="1" max="8" oninput="updateTimeline()"></td>
+            <td><input type="number" id="cl-k" value="1" min="0" max="8"></td>
+            <td><input type="number" id="re-k" value="2" min="0" max="8"></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="konpa-box">
+        <div class="section-title">🎺 Phase Konpa</div>
+        <div class="time-grid">
+          <div>
+            <label>Heure de début de soirée</label>
+            <input type="time" id="time-start" value="23:00" oninput="updateTimeline()"/>
+          </div>
+          <div>
+            <label>Heure de début du Konpa</label>
+            <input type="time" id="time-konpa" value="02:15" oninput="updateTimeline()"/>
+          </div>
+        </div>
+        <table class="genre-table" style="margin-bottom:1rem">
+          <thead>
+            <tr>
+              <th>Genre</th>
+              <th>Total / rotation</th>
+              <th>Classiques</th>
+              <th>Récents</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><div class="genre-label"><div class="genre-dot ko"></div>Konpa</div></td>
+              <td><input type="number" id="nb-ko" value="3" min="1" max="8" oninput="updateTimeline()"></td>
+              <td><input type="number" id="cl-ko" value="1" min="0" max="8"></td>
+              <td><input type="number" id="re-ko" value="2" min="0" max="8"></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="timeline-preview" id="timeline-preview">Aperçu de la timeline…</div>
+      </div>
+
+      <div style="margin-bottom:1.25rem">
+        <label>Année limite classique / récent</label>
+        <select id="era-year">
+          <option value="2018">Avant 2018 = classique</option>
+          <option value="2019">Avant 2019 = classique</option>
+          <option value="2020" selected>Avant 2020 = classique</option>
+          <option value="2021">Avant 2021 = classique</option>
+          <option value="2022">Avant 2022 = classique</option>
+        </select>
+      </div>
+
+      <button class="btn-green" id="gen-btn">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+        Générer la playlist sur Spotify
+      </button>
+    </div>
+  </section>
+
+  <!-- PROGRESS -->
+  <section id="progress-section">
+    <div class="section-title">Génération en cours…</div>
+    <div class="card">
+      <div class="progress-wrap"><div class="progress-bar" id="progress-bar"></div></div>
+      <div id="progress-log"></div>
+      <div id="tracks-preview"></div>
+    </div>
+  </section>
+
+  <!-- RESULT -->
+  <section id="result-section">
+    <div class="result-card">
+      <h3>🎉 Playlist créée !</h3>
+      <p id="result-desc"></p>
+      <a id="result-link" href="#" target="_blank" class="btn-open">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Ouvrir dans Spotify
+      </a>
+    </div>
+  </section>
+
+</div>
+
+<script>
+var CLIENT_ID = '8d38f9416611475b9108189802c111f8';
+var REDIRECT_URI = 'https://dj.anwadance.com';
+var SCOPES = 'playlist-modify-public playlist-modify-private playlist-read-public user-read-private user-read-email';
+var accessToken = null;
+var userId = null;
+
+// ── PKCE ─────────────────────────────────────────────────────────────────────
+function rnd(len) {
+  var a = new Uint8Array(len);
+  crypto.getRandomValues(a);
+  return Array.from(a, function(b){ return ('0'+b.toString(16)).slice(-2); }).join('');
+}
+function b64url(buf) {
+  return btoa(String.fromCharCode.apply(null, new Uint8Array(buf)))
+    .replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+async function connectSpotify() {
+  var verifier = rnd(64);
+  sessionStorage.setItem('pkce_v', verifier);
+  var hashed = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier));
+  var challenge = b64url(hashed);
+  var url = 'https://accounts.spotify.com/authorize?' + new URLSearchParams({
+    response_type: 'code',
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    redirect_uri: REDIRECT_URI,
+    code_challenge_method: 'S256',
+    code_challenge: challenge
+  });
+  window.location.href = url;
+}
+
+async function exchangeCode(code) {
+  var verifier = sessionStorage.getItem('pkce_v');
+  var res = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'authorization_code',
+      code: code,
+      redirect_uri: REDIRECT_URI,
+      client_id: CLIENT_ID,
+      code_verifier: verifier
+    })
+  });
+  var data = await res.json();
+  if (!data.access_token) { showConnect(); return; }
+  accessToken = data.access_token;
+  // Stocker token + expiration
+  var exp = Date.now() + (data.expires_in * 1000);
+  sessionStorage.setItem('spotify_token', accessToken);
+  sessionStorage.setItem('spotify_exp', exp.toString());
+  if (data.refresh_token) sessionStorage.setItem('spotify_refresh', data.refresh_token);
+  await loadUser();
+}
+
+async function refreshToken() {
+  var refresh = sessionStorage.getItem('spotify_refresh');
+  if (!refresh) return false;
+  var res = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'refresh_token',
+      refresh_token: refresh,
+      client_id: CLIENT_ID
+    })
+  });
+  var data = await res.json();
+  if (!data.access_token) return false;
+  accessToken = data.access_token;
+  var exp = Date.now() + (data.expires_in * 1000);
+  sessionStorage.setItem('spotify_token', accessToken);
+  sessionStorage.setItem('spotify_exp', exp.toString());
+  if (data.refresh_token) sessionStorage.setItem('spotify_refresh', data.refresh_token);
+  return true;
+}
+
+function showConnect() {
+  document.getElementById('loading-section').classList.add('hidden');
+  document.getElementById('connect-section').classList.remove('hidden');
+}
+
+function showConfig() {
+  document.getElementById('loading-section').classList.add('hidden');
+  document.getElementById('connect-section').classList.add('hidden');
+  document.getElementById('config-section').classList.remove('hidden');
+  updateTimeline();
+}
+
+async function loadUser() {
+  try {
+    var res = await fetch('https://api.spotify.com/v1/me', {
+      headers: { Authorization: 'Bearer ' + accessToken }
+    });
+    var data = await res.json();
+    if (!data.id) { showConnect(); return; }
+    userId = data.id;
+    document.getElementById('status-dot').classList.add('connected');
+    document.getElementById('status-text').style.display = 'none';
+    var ui = document.getElementById('user-info');
+    ui.style.display = 'flex';
+    if (data.images && data.images.length > 0) document.getElementById('user-avatar').src = data.images[0].url;
+    else document.getElementById('user-avatar').style.display = 'none';
+    document.getElementById('user-name').textContent = data.display_name || data.id;
+    showConfig();
+  } catch(e) { showConnect(); }
+}
+
+// ── Timeline ──────────────────────────────────────────────────────────────────
+function timeToMinutes(t) {
+  var p = t.split(':');
+  return parseInt(p[0]) * 60 + parseInt(p[1]);
+}
+function minutesToTime(m) {
+  m = ((m % 1440) + 1440) % 1440;
+  var h = Math.floor(m / 60) % 24;
+  var mn = m % 60;
+  return (h<10?'0':'')+h+'h'+(mn<10?'0':'')+mn;
+}
+function updateTimeline() {
+  var startMin = timeToMinutes(document.getElementById('time-start').value);
+  var konpaMin = timeToMinutes(document.getElementById('time-konpa').value);
+  var duree = parseInt(document.getElementById('duree').value) * 60;
+  var konpaOffset = konpaMin - startMin;
+  if (konpaOffset < 0) konpaOffset += 1440;
+  var nbS = parseInt(document.getElementById('nb-s').value)||3;
+  var nbB = parseInt(document.getElementById('nb-b').value)||3;
+  var nbK = parseInt(document.getElementById('nb-k').value)||3;
+  var nbKo = parseInt(document.getElementById('nb-ko').value)||3;
+  var perRotSBK = nbS + nbB + nbK;
+  var rotDurSBK = perRotSBK * 4;
+  var rotDurKO = nbKo * 4;
+  var sbkRotations = Math.floor(konpaOffset / rotDurSBK);
+  var sbkDur = sbkRotations * rotDurSBK;
+  var koDur = duree - sbkDur;
+  var koRotations = Math.ceil(koDur / rotDurKO);
+  document.getElementById('timeline-preview').innerHTML =
+    '<span class="sbk">● SBK</span> ' + minutesToTime(startMin) + ' → ' + minutesToTime(startMin + sbkDur) +
+    ' (' + sbkRotations + ' rotations · ' + (sbkRotations*perRotSBK) + ' titres)<br>' +
+    '<span class="ko">● KONPA</span> ' + minutesToTime(startMin+sbkDur) + ' → ' + minutesToTime(startMin+duree) +
+    ' (' + koRotations + ' rotations · ' + (koRotations*nbKo) + ' titres)';
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function extractId(val) {
+  val = val.trim();
+  var m = val.match(/playlist\/([a-zA-Z0-9]+)/);
+  return m ? m[1] : val;
+}
+function log(msg, type) {
+  var d = document.createElement('div');
+  d.className = 'log-line ' + (type||'info');
+  d.textContent = msg;
+  document.getElementById('progress-log').appendChild(d);
+  d.scrollIntoView({behavior:'smooth'});
+}
+function setProgress(p) { document.getElementById('progress-bar').style.width = p+'%'; }
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}
+  return a;
+}
+function addTrackPreview(g, title, artist, year, eraYear, timeStr) {
+  var isRecent = year >= eraYear;
+  var el = document.createElement('div');
+  el.className = 'track-item';
+  el.innerHTML = '<span class="track-badge '+g+'">'+g+'</span>' +
+    '<div style="flex:1"><div class="track-name">'+title+'</div><div class="track-artist">'+artist+'</div></div>' +
+    '<span class="track-year '+(isRecent?'recent':'classic')+'">'+year+'</span>' +
+    '<span class="track-time">'+timeStr+'</span>';
+  document.getElementById('tracks-preview').appendChild(el);
+}
+
+function loadPlaylist(id) {
+  var tracks = [];
+  function fetchPage(url) {
+    return fetch(url, {headers:{Authorization:'Bearer '+accessToken}})
+      .then(function(r){return r.json();})
+      .then(function(data){
+        if (data.items) {
+          data.items.forEach(function(item){
+            if (item.track && item.track.uri && item.track.uri.indexOf('spotify:track:')===0) {
+              var rd = item.track.album ? item.track.album.release_date : '0000';
+              tracks.push({uri:item.track.uri, name:item.track.name, artist:item.track.artists[0]?item.track.artists[0].name:'', year:parseInt(rd.substring(0,4))||0});
+            }
+          });
+        }
+        if (data.next) return fetchPage(data.next);
+        return tracks;
+      });
+  }
+  return fetchPage('https://api.spotify.com/v1/playlists/'+id+'/tracks?limit=100&market=FR&fields=next,items(track(uri,name,artists,album(release_date)))');
+}
+
+async function generatePlaylist() {
+  // Refresh token si expiré
+  var exp = parseInt(sessionStorage.getItem('spotify_exp')||'0');
+  if (Date.now() > exp - 60000) {
+    var ok = await refreshToken();
+    if (!ok) { showConnect(); return; }
+  }
+
+  var btn = document.getElementById('gen-btn');
+  btn.disabled = true;
+
+  var name = document.getElementById('playlist-name').value || 'ANWA SBK';
+  var duree = parseInt(document.getElementById('duree').value);
+  var eraYear = parseInt(document.getElementById('era-year').value);
+  var nbS=parseInt(document.getElementById('nb-s').value), clS=parseInt(document.getElementById('cl-s').value), reS=parseInt(document.getElementById('re-s').value);
+  var nbB=parseInt(document.getElementById('nb-b').value), clB=parseInt(document.getElementById('cl-b').value), reB=parseInt(document.getElementById('re-b').value);
+  var nbK=parseInt(document.getElementById('nb-k').value), clK=parseInt(document.getElementById('cl-k').value), reK=parseInt(document.getElementById('re-k').value);
+  var nbKo=parseInt(document.getElementById('nb-ko').value), clKo=parseInt(document.getElementById('cl-ko').value), reKo=parseInt(document.getElementById('re-ko').value);
+  var startMin=timeToMinutes(document.getElementById('time-start').value);
+  var konpaMin=timeToMinutes(document.getElementById('time-konpa').value);
+  var konpaOffset=konpaMin-startMin; if(konpaOffset<0)konpaOffset+=1440;
+  var perRotSBK=nbS+nbB+nbK;
+  var sbkRotations=Math.floor(konpaOffset/(perRotSBK*4));
+  var sbkDur=sbkRotations*perRotSBK*4;
+  var koRotations=Math.ceil((duree*60-sbkDur)/(nbKo*4));
+  var idS=extractId(document.getElementById('src-s').value);
+  var idB=extractId(document.getElementById('src-b').value);
+  var idK=extractId(document.getElementById('src-k').value);
+  var idKo=extractId(document.getElementById('src-ko').value);
+
+  document.getElementById('progress-section').style.display='block';
+  document.getElementById('result-section').style.display='none';
+  document.getElementById('progress-log').innerHTML='';
+  document.getElementById('tracks-preview').innerHTML='';
+  setProgress(0);
+
+  try {
+    log('🎵 Chargement Salsa…','info'); var sAll=await loadPlaylist(idS);
+    var sC=shuffle(sAll.filter(function(t){return t.year<eraYear;})), sR=shuffle(sAll.filter(function(t){return t.year>=eraYear;}));
+    log('✓ Salsa : '+sC.length+' classiques / '+sR.length+' récents','ok'); setProgress(10);
+
+    log('🎵 Chargement Bachata…','info'); var bAll=await loadPlaylist(idB);
+    var bC=shuffle(bAll.filter(function(t){return t.year<eraYear;})), bR=shuffle(bAll.filter(function(t){return t.year>=eraYear;}));
+    log('✓ Bachata : '+bC.length+' classiques / '+bR.length+' récents','ok'); setProgress(20);
+
+    log('🎵 Chargement Kizomba…','info'); var kAll=await loadPlaylist(idK);
+    var kC=shuffle(kAll.filter(function(t){return t.year<eraYear;})), kR=shuffle(kAll.filter(function(t){return t.year>=eraYear;}));
+    log('✓ Kizomba : '+kC.length+' classiques / '+kR.length+' récents','ok'); setProgress(30);
+
+    log('🎺 Chargement Konpa…','ko'); var koAll=await loadPlaylist(idKo);
+    var koC=shuffle(koAll.filter(function(t){return t.year<eraYear;})), koR=shuffle(koAll.filter(function(t){return t.year>=eraYear;}));
+    log('✓ Konpa : '+koC.length+' classiques / '+koR.length+' récents','ok'); setProgress(40);
+
+    var list=[];
+    for(var r=0;r<sbkRotations;r++){
+      for(var i=0;i<clS;i++) list.push({g:'S',track:sC[(r*clS+i)%(sC.length||1)]});
+      for(var i=0;i<reS;i++) list.push({g:'S',track:sR[(r*reS+i)%(sR.length||1)]});
+      for(var i=0;i<clB;i++) list.push({g:'B',track:bC[(r*clB+i)%(bC.length||1)]});
+      for(var i=0;i<reB;i++) list.push({g:'B',track:bR[(r*reB+i)%(bR.length||1)]});
+      for(var i=0;i<clK;i++) list.push({g:'K',track:kC[(r*clK+i)%(kC.length||1)]});
+      for(var i=0;i<reK;i++) list.push({g:'K',track:kR[(r*reK+i)%(kR.length||1)]});
+    }
+    for(var r=0;r<koRotations;r++){
+      for(var i=0;i<clKo;i++) list.push({g:'KO',track:koC[(r*clKo+i)%(koC.length||1)]});
+      for(var i=0;i<reKo;i++) list.push({g:'KO',track:koR[(r*reKo+i)%(koR.length||1)]});
+    }
+
+    log('📋 '+list.length+' titres · '+sbkRotations+' rotations SBK + '+koRotations+' rotations Konpa','info');
+    log('🔨 Création de la playlist…','info');
+
+    var cr=await fetch('https://api.spotify.com/v1/me/playlists',{method:'POST',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},body:JSON.stringify({name:name,description:'Playlist ANWA DJ — '+new Date().toLocaleDateString('fr-FR'),public:true})});
+    var pl=await cr.json();
+    if(!pl.id){log('❌ Erreur : '+JSON.stringify(pl),'err');btn.disabled=false;return;}
+    log('✓ Playlist "'+name+'" créée','ok'); setProgress(50);
+
+    var uris=[];
+    list.forEach(function(item,idx){
+      if(item.track){
+        uris.push(item.track.uri);
+        var tm=((startMin+idx*4)%1440+1440)%1440;
+        var h=Math.floor(tm/60)%24, mn=tm%60;
+        addTrackPreview(item.g,item.track.name,item.track.artist,item.track.year,eraYear,(h<10?'0':'')+h+'h'+(mn<10?'0':'')+mn);
+      }
+    });
+    setProgress(80);
+
+    for(var i=0;i<uris.length;i+=100){
+      var r=await fetch('https://api.spotify.com/v1/playlists/'+pl.id+'/tracks',{method:'POST',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},body:JSON.stringify({uris:uris.slice(i,i+100)})});
+      var d=await r.json();
+      if(d.error) log('❌ '+d.error.message,'err');
+    }
+
+    setProgress(100);
+    log('🎉 '+uris.length+' titres ajoutés !','ok');
+    document.getElementById('result-section').style.display='block';
+    document.getElementById('result-desc').textContent=uris.length+' titres · SBK jusqu\'à '+minutesToTime(startMin+sbkDur)+' · Konpa ensuite · ~'+duree+'h';
+    document.getElementById('result-link').href=pl.external_urls?pl.external_urls.spotify:'#';
+    btn.disabled=false;
+  } catch(e) {
+    log('❌ Erreur : '+e.message,'err');
+    btn.disabled=false;
+  }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+document.getElementById('connect-btn').addEventListener('click', connectSpotify);
+document.getElementById('gen-btn').addEventListener('click', generatePlaylist);
+
+window.addEventListener('load', async function() {
+  var params = new URLSearchParams(window.location.search);
+  var code = params.get('code');
+
+  if (code) {
+    window.history.replaceState({}, document.title, window.location.pathname);
+    await exchangeCode(code);
+    return;
+  }
+
+  var token = sessionStorage.getItem('spotify_token');
+  var exp = parseInt(sessionStorage.getItem('spotify_exp')||'0');
+
+  if (token && Date.now() < exp - 60000) {
+    accessToken = token;
+    await loadUser();
+    return;
+  }
+
+  if (sessionStorage.getItem('spotify_refresh')) {
+    var ok = await refreshToken();
+    if (ok) { await loadUser(); return; }
+  }
+
+  showConnect();
+});
+</script>
+</body>
+</html>
