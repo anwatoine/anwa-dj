@@ -245,32 +245,20 @@ var SCOPES = 'playlist-modify-public playlist-modify-private user-read-private u
 var TOKEN_ENDPOINT = 'https://dj.anwadance.com/callback.php';
 var accessToken = null;
 
-function rnd(len) {
-  var a = new Uint8Array(len);
-  crypto.getRandomValues(a);
-  return Array.from(a, function(b){ return ('0'+b.toString(16)).slice(-2); }).join('');
-}
-function b64url(buf) {
-  return btoa(String.fromCharCode.apply(null, new Uint8Array(buf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-}
-
-
-  var verifier = rnd(64);
-  sessionStorage.setItem('pkce_v', verifier);
-  var hashed = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier));
-  var challenge = b64url(hashed);
+function connectSpotify() {
   window.location.href = 'https://accounts.spotify.com/authorize?' + new URLSearchParams({
-    response_type: 'code', client_id: CLIENT_ID, scope: SCOPES,
-    redirect_uri: REDIRECT_URI, code_challenge_method: 'S256', code_challenge: challenge
+    response_type: 'code',
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    redirect_uri: REDIRECT_URI
   });
 }
 
 async function exchangeCode(code) {
-  var verifier = sessionStorage.getItem('pkce_v');
   var res = await fetch(TOKEN_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ grant_type: 'authorization_code', code: code, code_verifier: verifier })
+    body: JSON.stringify({ grant_type: 'authorization_code', code: code })
   });
   var data = await res.json();
   if (!data.access_token) { showConnect(); return; }
