@@ -1,7 +1,7 @@
 <?php
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: https://dj.anwadance.com');
-header('Access-Control-Allow-Methods: POST');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -22,16 +22,14 @@ $client_secret = '576ac534e4ee447fb5b1c1184307c025';
 $redirect_uri = 'https://dj.anwadance.com';
 
 $params = [
-    'client_id'     => $client_id,
-    'client_secret' => $client_secret,
+    'grant_type'    => $grant_type,
     'redirect_uri'  => $redirect_uri,
+    'client_id'     => $client_id,
 ];
 
 if ($grant_type === 'authorization_code') {
-    $params['grant_type'] = 'authorization_code';
     $params['code'] = $body['code'] ?? '';
 } elseif ($grant_type === 'refresh_token') {
-    $params['grant_type'] = 'refresh_token';
     $params['refresh_token'] = $body['refresh_token'] ?? '';
 } else {
     http_response_code(400);
@@ -43,7 +41,10 @@ $ch = curl_init('https://accounts.spotify.com/api/token');
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_POST, true);
 curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($params));
-curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    'Content-Type: application/x-www-form-urlencoded',
+    'Authorization: Basic ' . base64_encode($client_id . ':' . $client_secret)
+]);
 $response = curl_exec($ch);
 curl_close($ch);
 

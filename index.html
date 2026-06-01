@@ -254,7 +254,7 @@ function b64url(buf) {
   return btoa(String.fromCharCode.apply(null, new Uint8Array(buf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 }
 
-async function connectSpotify() {
+
   var verifier = rnd(64);
   sessionStorage.setItem('pkce_v', verifier);
   var hashed = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier));
