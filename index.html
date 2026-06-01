@@ -396,7 +396,7 @@ async function loadPlaylist(id) {
         return tracks;
       });
   }
-  return fetchPage('https://api.spotify.com/v1/playlists/'+id+'/tracks?limit=100&market=FR&fields=next,items(track(uri,name,artists,album(release_date)))');
+  return fetchPage('https://api.spotify.com/v1/playlists/'+id+'/items?limit=100&market=FR&fields=next,items(track(uri,name,artists,album(release_date)))');
 }
 
 async function generatePlaylist() {
@@ -476,7 +476,7 @@ async function generatePlaylist() {
     setProgress(80);
 
     for(var i=0;i<uris.length;i+=100){
-      var r=await fetch('https://api.spotify.com/v1/playlists/'+pl.id+'/tracks',{method:'POST',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},body:JSON.stringify({uris:uris.slice(i,i+100)})});
+      var r=await fetch('https://api.spotify.com/v1/playlists/'+pl.id+'/items',{method:'POST',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},body:JSON.stringify({uris:uris.slice(i,i+100)})});
       var d=await r.json();
       if(d.error) log('❌ '+d.error.message,'err');
     }
