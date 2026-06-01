@@ -378,7 +378,7 @@ async function ensureToken() {
 }
 
 async function loadPlaylist(id) {
-  var token = await getReadToken() || accessToken;
+  var token = accessToken;
   var tracks=[];
   function fetchPage(url) {
     return fetch(url,{headers:{Authorization:'Bearer '+token}})
@@ -426,7 +426,9 @@ async function generatePlaylist() {
   setProgress(0);
 
   try {
-    log('🎵 Chargement Salsa…','info'); var sAll=await loadPlaylist(idS);
+    log('🎵 Chargement Salsa…','info');
+  log('🔑 Token: ' + accessToken.substring(0,20) + '…','info');
+  var sAll=await loadPlaylist(idS);
     var sC=shuffle(sAll.filter(function(t){return t.year<eraYear;})),sR=shuffle(sAll.filter(function(t){return t.year>=eraYear;}));
     log('✓ Salsa : '+sC.length+' classiques / '+sR.length+' récents','ok'); setProgress(10);
 
