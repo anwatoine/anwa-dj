@@ -243,7 +243,20 @@ var CLIENT_ID = '8d38f9416611475b9108189802c111f8';
 var REDIRECT_URI = 'https://dj.anwadance.com';
 var SCOPES = 'playlist-modify-public playlist-modify-private playlist-read-private playlist-read-collaborative user-read-private user-read-email user-library-read user-follow-read';
 var TOKEN_ENDPOINT = 'https://dj.anwadance.com/callback.php';
-var accessToken = null;
+var accessToken = null;  // token OAuth utilisateur (créer playlists)
+var readToken = null;    // token Client Credentials (lire playlists publiques)
+
+async function getReadToken() {
+  if (readToken) return readToken;
+  var res = await fetch(TOKEN_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'client_credentials' })
+  });
+  var data = await res.json();
+  if (data.access_token) { readToken = data.access_token; }
+  return readToken;
+}
 
 function connectSpotify() {
   window.location.href = 'https://accounts.spotify.com/authorize?' + new URLSearchParams({
@@ -364,10 +377,11 @@ async function ensureToken() {
   return true;
 }
 
-function loadPlaylist(id) {
+async function loadPlaylist(id) {
+  var token = await getReadToken() || accessToken;
   var tracks=[];
   function fetchPage(url) {
-    return fetch(url,{headers:{Authorization:'Bearer '+accessToken}})
+    return fetch(url,{headers:{Authorization:'Bearer '+token}})
       .then(function(r){return r.json();})
       .then(function(data){
         if(data.items){
