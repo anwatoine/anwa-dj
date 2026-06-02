@@ -482,7 +482,7 @@ function openSearch(genre, label) {
   document.getElementById('search-results').innerHTML = '';
   document.getElementById('search-modal').classList.remove('hidden');
   document.getElementById('search-input').focus();
-  doSearch();
+  doSearch(false);
 }
 
 function closeSearch() {
@@ -686,7 +686,7 @@ async function generatePlaylist() {
 document.getElementById('connect-btn').addEventListener('click', connectSpotify);
 
 // Recherche playlist
-document.getElementById('search-go-btn').addEventListener('click', doSearch);
+document.getElementById('search-go-btn').addEventListener('click', function() { doSearch(false); });
 
 // Event delegation pour les boutons Choisir dans les résultats
 document.getElementById('search-results').addEventListener('click', function(e) {
@@ -696,7 +696,7 @@ document.getElementById('search-results').addEventListener('click', function(e) 
   }
 });
 document.getElementById('search-input').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') doSearch();
+  if (e.key === 'Enter') doSearch(false);
 });
 document.getElementById('search-modal').addEventListener('click', function(e) {
   if (e.target === this) closeSearch();
