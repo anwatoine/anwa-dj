@@ -70,18 +70,22 @@
   /* Énergie */
   .energy-box { background: rgba(251,191,36,0.06); border: 1px solid rgba(251,191,36,0.2); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem; }
   .energy-box .section-title { color: #fbbf24; }
-  .energy-modes { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.25rem; }
+  .energy-modes { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1rem; }
   .energy-mode-btn { padding: 8px 14px; border-radius: 50px; border: 1px solid var(--border); background: var(--bg3); color: var(--muted); font-size: 13px; cursor: pointer; transition: all .2s; }
   .energy-mode-btn.active { border-color: #fbbf24; color: #fbbf24; background: rgba(251,191,36,0.1); }
-  .energy-curve { background: var(--bg3); border-radius: 10px; padding: 12px; margin-bottom: 1rem; height: 80px; position: relative; overflow: hidden; }
-  .energy-curve canvas { width: 100%; height: 100%; }
-  .manual-sliders { display: none; }
-  .manual-sliders.visible { display: block; }
-  .rotation-slider { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-  .rotation-slider label { font-size: 12px; color: var(--muted); min-width: 80px; flex-shrink: 0; }
-  .rotation-slider input[type=range] { flex: 1; -webkit-appearance: none; height: 4px; border-radius: 2px; background: var(--border); outline: none; }
-  .rotation-slider input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #fbbf24; cursor: pointer; }
-  .rotation-slider .energy-emoji { font-size: 16px; min-width: 24px; text-align: center; }
+  .energy-curve { background: var(--bg3); border-radius: 10px; margin-bottom: 0.5rem; height: 130px; position: relative; overflow: hidden; }
+  .energy-curve canvas { width: 100% !important; height: 100% !important; display: block; }
+  /* Égaliseur manuel */
+  .manual-eq { background: var(--bg3); border-radius: 10px; padding: 12px 12px 0; margin-bottom: 0.5rem; }
+  .eq-bars { display: flex; align-items: flex-end; gap: 3px; height: 100px; margin-bottom: 6px; }
+  .eq-bar-wrap { display: flex; flex-direction: column; align-items: center; flex: 1; height: 100%; position: relative; }
+  .eq-bar-track { flex: 1; width: 100%; display: flex; flex-direction: column; justify-content: flex-end; cursor: pointer; position: relative; border-radius: 4px; overflow: hidden; background: rgba(255,255,255,0.05); }
+  .eq-bar-fill { width: 100%; border-radius: 4px 4px 0 0; transition: height .15s ease; }
+  .eq-bar-label { font-size: 9px; color: var(--muted); margin-top: 4px; text-align: center; white-space: nowrap; }
+  .eq-time-row { display: flex; justify-content: space-between; padding: 0 0 8px; }
+  .eq-time-label { font-size: 10px; color: var(--muted); font-family: 'Space Mono', monospace; }
+  .eq-y-labels { position: absolute; left: -28px; top: 0; height: 100px; display: flex; flex-direction: column; justify-content: space-between; }
+  .eq-y-label { font-size: 10px; color: var(--muted); }
   .konpa-box .section-title { color: var(--ko-color); }
   .time-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
   .timeline-preview { background: var(--bg3); border-radius: 10px; padding: 12px 14px; font-size: 12px; color: var(--muted); font-family: 'Space Mono', monospace; }
@@ -305,12 +309,12 @@
           <button class="energy-mode-btn active" data-mode="waves" onclick="setEnergyMode('waves',this)">🌊 Vagues</button>
           <button class="energy-mode-btn" data-mode="pyramid" onclick="setEnergyMode('pyramid',this)">🏔️ Pyramide</button>
           <button class="energy-mode-btn" data-mode="contrast" onclick="setEnergyMode('contrast',this)">🎭 Contrastes</button>
-          <button class="energy-mode-btn" data-mode="manual" onclick="setEnergyMode('manual',this)">🎯 Manuel</button>
+          <button class="energy-mode-btn" data-mode="manual" onclick="setEnergyMode('manual',this)">🎯 Égaliseur</button>
         </div>
-        <div class="energy-curve">
+        <div class="energy-curve" id="energy-curve-container">
           <canvas id="energy-canvas"></canvas>
         </div>
-        <div class="manual-sliders" id="manual-sliders"></div>
+        <div class="manual-eq" id="manual-eq" style="display:none"></div>
       </div>
 
       <button class="btn-green" id="gen-btn">
@@ -627,81 +631,26 @@ function loadSavedSources() {
 
 // ── ÉNERGIE ──────────────────────────────────────────────────────────────────
 var energyMode = 'waves';
-var manualLevels = [];
+var manualLevels = {};
 
 function setEnergyMode(mode, btn) {
   energyMode = mode;
   document.querySelectorAll('.energy-mode-btn').forEach(function(b) { b.classList.remove('active'); });
   btn.classList.add('active');
-  var ms = document.getElementById('manual-sliders');
-  ms.classList.toggle('visible', mode === 'manual');
-  drawEnergyCurve();
-}
-
-function getEnergyLevels(rotations) {
-  var levels = [];
-  switch(energyMode) {
-    case 'waves':
-      // Sinusoïde : creux → pic → creux → pic
-      for (var i = 0; i < rotations; i++) {
-        levels.push(0.3 + 0.7 * Math.abs(Math.sin(i * Math.PI / 3)));
-      }
-      break;
-    case 'pyramid':
-      // Montée jusqu'au milieu puis descente
-      var mid = (rotations - 1) / 2;
-      for (var i = 0; i < rotations; i++) {
-        levels.push(0.2 + 0.8 * (1 - Math.abs(i - mid) / mid));
-      }
-      break;
-    case 'contrast':
-      // Alternance bas/haut à chaque rotation
-      for (var i = 0; i < rotations; i++) {
-        levels.push(i % 2 === 0 ? 0.85 : 0.25);
-      }
-      break;
-    case 'manual':
-      for (var i = 0; i < rotations; i++) {
-        var slider = document.getElementById('slider-rot-' + i);
-        levels.push(slider ? parseFloat(slider.value) / 5 : 0.5);
-      }
-      break;
-    default:
-      for (var i = 0; i < rotations; i++) levels.push(0.5);
+  var eq = document.getElementById('manual-eq');
+  var curve = document.getElementById('energy-curve-container');
+  if (mode === 'manual') {
+    eq.style.display = 'block';
+    curve.style.display = 'none';
+    buildEqualizer();
+  } else {
+    eq.style.display = 'none';
+    curve.style.display = 'block';
+    drawEnergyCurve();
   }
-  return levels;
 }
 
-function buildManualSliders(rotations) {
-  var container = document.getElementById('manual-sliders');
-  container.innerHTML = '';
-  for (var i = 0; i < rotations; i++) {
-    var val = manualLevels[i] !== undefined ? manualLevels[i] : 3;
-    var emojis = ['😴','😌','🎵','💃','🔥'];
-    var div = document.createElement('div');
-    div.className = 'rotation-slider';
-    div.innerHTML = '<label>Rotation ' + (i+1) + '</label>' +
-      '<input type="range" id="slider-rot-' + i + '" min="1" max="5" value="' + val + '" oninput="updateManualSlider(' + i + ',this)">' +
-      '<span class="energy-emoji" id="emoji-rot-' + i + '">' + emojis[val-1] + '</span>';
-    container.appendChild(div);
-  }
-  drawEnergyCurve();
-}
-
-function updateManualSlider(idx, el) {
-  manualLevels[idx] = parseInt(el.value);
-  var emojis = ['😴','😌','🎵','💃','🔥'];
-  document.getElementById('emoji-rot-' + idx).textContent = emojis[parseInt(el.value)-1];
-  drawEnergyCurve();
-}
-
-function drawEnergyCurve() {
-  var canvas = document.getElementById('energy-canvas');
-  if (!canvas) return;
-  var ctx = canvas.getContext('2d');
-  canvas.width = canvas.offsetWidth || 400;
-  canvas.height = canvas.offsetHeight || 80;
-  
+function getRotationParams() {
   var nbS = parseInt(document.getElementById('nb-s').value)||3;
   var nbB = parseInt(document.getElementById('nb-b').value)||3;
   var nbK = parseInt(document.getElementById('nb-k').value)||3;
@@ -713,76 +662,242 @@ function drawEnergyCurve() {
   var sbkRot = Math.floor(off/(perSBK*4));
   var nbKo = parseInt(document.getElementById('nb-ko').value)||3;
   var koRot = Math.ceil((duree*60 - sbkRot*perSBK*4)/(nbKo*4));
-  var totalRot = sbkRot + koRot;
+  return { sbkRot: sbkRot, koRot: koRot, totalRot: sbkRot+koRot, startMin: startMin, duree: duree, perSBK: perSBK, nbKo: nbKo };
+}
 
-  if (energyMode === 'manual') buildManualSliders(totalRot);
-
-  var levels = getEnergyLevels(totalRot);
-  var W = canvas.width, H = canvas.height;
-  var pad = 8;
-
-  ctx.clearRect(0, 0, W, H);
-
-  // Gradient de fond
-  var grad = ctx.createLinearGradient(0, 0, 0, H);
-  grad.addColorStop(0, 'rgba(251,191,36,0.3)');
-  grad.addColorStop(1, 'rgba(251,191,36,0.02)');
-
-  // Tracer la courbe
-  ctx.beginPath();
-  for (var i = 0; i < levels.length; i++) {
-    var x = pad + (i / (levels.length - 1 || 1)) * (W - pad*2);
-    var y = H - pad - levels[i] * (H - pad*2);
-    if (i === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
+function getEnergyLevels(totalRot) {
+  var levels = [];
+  switch(energyMode) {
+    case 'waves':
+      for (var i=0;i<totalRot;i++) levels.push(0.25 + 0.75*Math.abs(Math.sin(i*Math.PI/3)));
+      break;
+    case 'pyramid':
+      var mid=(totalRot-1)/2;
+      for (var i=0;i<totalRot;i++) levels.push(0.15 + 0.85*(1-Math.abs(i-mid)/(mid||1)));
+      break;
+    case 'contrast':
+      for (var i=0;i<totalRot;i++) levels.push(i%2===0?0.9:0.2);
+      break;
+    case 'manual':
+      for (var i=0;i<totalRot;i++) levels.push((manualLevels[i]||3)/5);
+      break;
+    default:
+      for (var i=0;i<totalRot;i++) levels.push(0.5);
   }
-  // Fermer pour le remplissage
-  ctx.lineTo(W - pad, H - pad);
-  ctx.lineTo(pad, H - pad);
+  return levels;
+}
+
+function minutesToTimeStr(m) {
+  m=((m%1440)+1440)%1440;
+  var h=Math.floor(m/60)%24, mn=m%60;
+  return (h<10?'0':'')+h+'h'+(mn<10?'0':'')+mn;
+}
+
+function buildEqualizer() {
+  var p = getRotationParams();
+  var totalRot = p.totalRot;
+  var eq = document.getElementById('manual-eq');
+  var emojis = ['😴','😌','🎵','💃','🔥'];
+  var colors_sbk = ['rgba(29,185,84,VAL)'];
+  var colors_ko = ['rgba(244,63,94,VAL)'];
+
+  var html = '<div style="position:relative;padding-left:32px">';
+  // Labels Y
+  html += '<div class="eq-y-labels"><span class="eq-y-label">🔥</span><span class="eq-y-label">🎵</span><span class="eq-y-label">😴</span></div>';
+  html += '<div class="eq-bars" id="eq-bars">';
+
+  for (var i=0; i<totalRot; i++) {
+    var isKonpa = i >= p.sbkRot;
+    var val = manualLevels[i] !== undefined ? manualLevels[i] : 3;
+    var pct = (val/5*100);
+    var color = isKonpa
+      ? 'rgba(244,63,94,'+( 0.4+val/5*0.6)+')'
+      : 'rgba(29,185,84,'+(0.4+val/5*0.6)+')';
+    
+    // Calculer l'heure de cette rotation
+    var rotMin = p.startMin + i * p.perSBK * 4;
+    if (isKonpa) rotMin = p.startMin + p.sbkRot * p.perSBK * 4 + (i - p.sbkRot) * p.nbKo * 4;
+    var timeLabel = minutesToTimeStr(rotMin);
+
+    html += '<div class="eq-bar-wrap" id="eq-wrap-'+i+'">' +
+      '<div class="eq-bar-track" onclick="cycleBarLevel('+i+',this)">' +
+        '<div class="eq-bar-fill" id="eq-fill-'+i+'" style="height:'+pct+'%;background:'+color+';"></div>' +
+      '</div>' +
+      '<div class="eq-bar-label">' + (isKonpa?'<span style="color:var(--ko-color)">K</span>':'<span style="color:var(--green)">S</span>') + '<br>' + timeLabel + '</div>' +
+    '</div>';
+  }
+
+  html += '</div>';
+  // Ligne temps
+  html += '<div class="eq-time-row">';
+  html += '<span class="eq-time-label">'+minutesToTimeStr(p.startMin)+'</span>';
+  if (p.sbkRot > 0 && p.koRot > 0) {
+    html += '<span class="eq-time-label" style="color:var(--ko-color)">▸ Konpa '+minutesToTimeStr(p.startMin + p.sbkRot*p.perSBK*4)+'</span>';
+  }
+  html += '<span class="eq-time-label">'+minutesToTimeStr(p.startMin+p.duree*60)+'</span>';
+  html += '</div>';
+  html += '</div>';
+
+  eq.innerHTML = html;
+}
+
+function cycleBarLevel(idx, barEl) {
+  var current = manualLevels[idx] || 3;
+  // Permettre le clic pour monter/descendre
+  var fill = document.getElementById('eq-fill-'+idx);
+  if (!fill) return;
+  
+  // Calculer la position du clic dans la barre
+  var rect = barEl.getBoundingClientRect();
+  var relY = rect.bottom - (event ? event.clientY : rect.top + rect.height/2);
+  var newVal = Math.max(1, Math.min(5, Math.round(relY / rect.height * 5)));
+  manualLevels[idx] = newVal;
+  
+  var p = getRotationParams();
+  var isKonpa = idx >= p.sbkRot;
+  var color = isKonpa
+    ? 'rgba(244,63,94,'+(0.4+newVal/5*0.6)+')'
+    : 'rgba(29,185,84,'+(0.4+newVal/5*0.6)+')';
+  fill.style.height = (newVal/5*100)+'%';
+  fill.style.background = color;
+}
+
+function drawEnergyCurve() {
+  var canvas = document.getElementById('energy-canvas');
+  if (!canvas || !canvas.getContext) return;
+  
+  var container = document.getElementById('energy-curve-container');
+  canvas.width = container.offsetWidth || 500;
+  canvas.height = container.offsetHeight || 130;
+  
+  var p = getRotationParams();
+  var levels = getEnergyLevels(p.totalRot);
+  var W = canvas.width, H = canvas.height;
+  var padL = 28, padR = 12, padT = 16, padB = 32;
+  var ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+
+  if (levels.length < 2) return;
+
+  // Grille horizontale
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  ctx.lineWidth = 1;
+  for (var i=0;i<=4;i++) {
+    var y = padT + (i/4) * (H-padT-padB);
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W-padR, y); ctx.stroke();
+  }
+
+  // Labels Y
+  var yLabels = ['🔥','💃','🎵','😌','😴'];
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.font = '11px sans-serif';
+  ctx.textAlign = 'right';
+  for (var i=0;i<5;i++) {
+    var y = padT + (i/4)*(H-padT-padB);
+    ctx.fillText(yLabels[i], padL-4, y+4);
+  }
+
+  // Labels X (heures)
+  ctx.textAlign = 'center';
+  ctx.font = '9px Space Mono, monospace';
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  var step = Math.max(1, Math.floor(levels.length/6));
+  for (var i=0;i<levels.length;i+=step) {
+    var x = padL + (i/(levels.length-1))*(W-padL-padR);
+    var isKonpa = i >= p.sbkRot;
+    var rotMin = p.startMin + i * p.perSBK * 4;
+    if (isKonpa) rotMin = p.startMin + p.sbkRot*p.perSBK*4 + (i-p.sbkRot)*p.nbKo*4;
+    ctx.fillStyle = isKonpa ? 'rgba(244,63,94,0.6)' : 'rgba(255,255,255,0.3)';
+    ctx.fillText(minutesToTimeStr(rotMin), x, H-6);
+  }
+
+  // Ligne de séparation Konpa
+  if (p.koRot > 0 && p.sbkRot > 0 && p.sbkRot < levels.length) {
+    var kx = padL + (p.sbkRot/(levels.length-1))*(W-padL-padR);
+    ctx.beginPath(); ctx.moveTo(kx, padT); ctx.lineTo(kx, H-padB);
+    ctx.strokeStyle = 'rgba(244,63,94,0.5)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([5,4]);
+    ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = '#f43f5e';
+    ctx.font = '9px Space Mono, monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText('KONPA', kx+3, padT+10);
+  }
+
+  // Zone SBK (gradient vert)
+  var sbkEndX = p.sbkRot > 0 && p.sbkRot < levels.length
+    ? padL + (p.sbkRot/(levels.length-1))*(W-padL-padR)
+    : W-padR;
+
+  // Courbe SBK
+  ctx.beginPath();
+  for (var i=0;i<Math.min(p.sbkRot+1,levels.length);i++) {
+    var x = padL + (i/(levels.length-1))*(W-padL-padR);
+    var y = padT + (1-levels[i])*(H-padT-padB);
+    if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  }
+  // Remplissage
+  var sbkGrad = ctx.createLinearGradient(0, padT, 0, H-padB);
+  sbkGrad.addColorStop(0,'rgba(29,185,84,0.35)');
+  sbkGrad.addColorStop(1,'rgba(29,185,84,0.02)');
+  var lastSBK = Math.min(p.sbkRot, levels.length-1);
+  ctx.lineTo(padL+(lastSBK/(levels.length-1))*(W-padL-padR), H-padB);
+  ctx.lineTo(padL, H-padB);
   ctx.closePath();
-  ctx.fillStyle = grad;
+  ctx.fillStyle = sbkGrad;
   ctx.fill();
 
-  // Ligne principale
+  // Re-tracer la ligne SBK propre
   ctx.beginPath();
-  for (var i = 0; i < levels.length; i++) {
-    var x = pad + (i / (levels.length - 1 || 1)) * (W - pad*2);
-    var y = H - pad - levels[i] * (H - pad*2);
-    if (i === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
+  for (var i=0;i<Math.min(p.sbkRot+1,levels.length);i++) {
+    var x = padL + (i/(levels.length-1))*(W-padL-padR);
+    var y = padT + (1-levels[i])*(H-padT-padB);
+    if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
   }
-  ctx.strokeStyle = '#fbbf24';
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = '#1DB954';
+  ctx.lineWidth = 2.5;
   ctx.stroke();
 
-  // Points
-  for (var i = 0; i < levels.length; i++) {
-    var x = pad + (i / (levels.length - 1 || 1)) * (W - pad*2);
-    var y = H - pad - levels[i] * (H - pad*2);
-    var isKonpa = i >= sbkRot;
+  // Courbe Konpa
+  if (p.koRot > 0 && p.sbkRot < levels.length) {
     ctx.beginPath();
-    ctx.arc(x, y, 4, 0, Math.PI*2);
-    ctx.fillStyle = isKonpa ? '#f43f5e' : '#fbbf24';
+    for (var i=p.sbkRot;i<levels.length;i++) {
+      var x = padL + (i/(levels.length-1))*(W-padL-padR);
+      var y = padT + (1-levels[i])*(H-padT-padB);
+      if (i===p.sbkRot) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    var koGrad = ctx.createLinearGradient(0,padT,0,H-padB);
+    koGrad.addColorStop(0,'rgba(244,63,94,0.35)');
+    koGrad.addColorStop(1,'rgba(244,63,94,0.02)');
+    ctx.lineTo(W-padR, H-padB);
+    ctx.lineTo(padL+(p.sbkRot/(levels.length-1))*(W-padL-padR), H-padB);
+    ctx.closePath();
+    ctx.fillStyle = koGrad;
     ctx.fill();
+
+    ctx.beginPath();
+    for (var i=p.sbkRot;i<levels.length;i++) {
+      var x = padL + (i/(levels.length-1))*(W-padL-padR);
+      var y = padT + (1-levels[i])*(H-padT-padB);
+      if (i===p.sbkRot) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.strokeStyle = '#f43f5e';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
   }
 
-  // Label Konpa
-  if (koRot > 0 && sbkRot > 0) {
-    var kx = pad + (sbkRot / (levels.length - 1 || 1)) * (W - pad*2);
-    ctx.beginPath();
-    ctx.moveTo(kx, pad);
-    ctx.lineTo(kx, H - pad);
-    ctx.strokeStyle = 'rgba(244,63,94,0.4)';
-    ctx.lineWidth = 1;
-    ctx.setLineDash([4,4]);
-    ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.fillStyle = '#f43f5e';
-    ctx.font = '10px Space Mono, monospace';
-    ctx.fillText('KONPA', kx + 4, 14);
+  // Points sur la courbe
+  for (var i=0;i<levels.length;i++) {
+    var x = padL + (i/(levels.length-1))*(W-padL-padR);
+    var y = padT + (1-levels[i])*(H-padT-padB);
+    ctx.beginPath(); ctx.arc(x,y,4,0,Math.PI*2);
+    ctx.fillStyle = i>=p.sbkRot ? '#f43f5e' : '#1DB954';
+    ctx.fill();
   }
 }
 
+// ── BPM ──────────────────────────────────────────────────────────────────────
 // ── BPM ──────────────────────────────────────────────────────────────────────
 async function fetchBPMs(uris) {
   // Extraire les IDs Spotify depuis les URIs
