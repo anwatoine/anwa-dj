@@ -8,28 +8,28 @@ curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 curl_setopt($ch, CURLOPT_TIMEOUT, 10);
 curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
 curl_setopt($ch, CURLOPT_HTTPHEADER, [
-    'Accept: application/json',
+    'Accept: application/json, text/html, */*',
     'Referer: https://songstats.com/',
+    'Accept-Encoding: identity', // Pas de compression
 ]);
-curl_setopt($ch, CURLOPT_ENCODING, '');
+// Ne pas décoder automatiquement
 $response = curl_exec($ch);
 $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+$content_type = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
 curl_close($ch);
 
-echo "Code: $code | Length: " . strlen($response) . "\n\n";
+echo "Code: $code\n";
+echo "Content-Type: $content_type\n";
+echo "Length: " . strlen($response) . "\n\n";
 
-// Chercher BPM/tempo
-if (preg_match('/"tempo"[:\s]+([0-9.]+)/i', $response, $m)) echo "Tempo: " . $m[1] . "\n";
-if (preg_match('/"bpm"[:\s]+([0-9.]+)/i', $response, $m)) echo "BPM: " . $m[1] . "\n";
-if (preg_match('/"key"[:\s]+"([^"]+)"/i', $response, $m)) echo "Key: " . $m[1] . "\n";
+// Sauvegarder dans un fichier pour inspection
+file_put_contents(__DIR__ . '/songstats_response.txt', $response);
+echo "Fichier sauvegardé : songstats_response.txt\n\n";
 
-// Afficher le début
-echo "\n--- Début réponse ---\n";
-echo substr($response, 0, 1000);
+// Afficher en hexa les 100 premiers octets
+echo "Premiers octets (hex):\n";
+echo bin2hex(substr($response, 0, 50)) . "\n\n";
 
-// Si JSON, parser
-$data = json_decode($response, true);
-if ($data) {
-    echo "\n--- JSON parsé ---\n";
-    echo json_encode(array_slice($data, 0, 5), JSON_PRETTY_PRINT);
-}
+// Afficher brut
+echo "Début brut:\n";
+echo substr($response, 0, 500);
