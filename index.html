@@ -521,6 +521,7 @@ async function doSearch(append) {
       { headers: { Authorization: 'Bearer ' + token } }
     );
     const data = await res.json();
+    console.log('Spotify search response:', data);
     const playlists = data.playlists ? data.playlists.items.filter(p => p) : [];
     searchTotal = data.playlists ? data.playlists.total : 0;
     searchOffset += playlists.length;
