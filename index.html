@@ -522,7 +522,7 @@ async function doSearch() {
           '<div class="playlist-name">' + pl.name + '</div>' +
           '<div class="playlist-meta">' + (pl.owner ? pl.owner.display_name : '') + ' · ' + (pl.tracks ? pl.tracks.total : '?') + ' titres</div>' +
         '</div>' +
-        '<button class="playlist-select-btn" onclick="selectPlaylist('' + pl.id + '','' + pl.name.replace(/'/g,"\'") + '')">Choisir</button>';
+        '<button class="playlist-select-btn" data-id="' + pl.id + '" data-name="' + pl.name.replace(/"/g,'&quot;') + '">Choisir</button>';
       container.appendChild(div);
     });
   } catch(e) {
@@ -661,6 +661,14 @@ document.getElementById('connect-btn').addEventListener('click', connectSpotify)
 
 // Recherche playlist
 document.getElementById('search-go-btn').addEventListener('click', doSearch);
+
+// Event delegation pour les boutons Choisir dans les résultats
+document.getElementById('search-results').addEventListener('click', function(e) {
+  var btn = e.target.closest('.playlist-select-btn');
+  if (btn) {
+    selectPlaylist(btn.getAttribute('data-id'), btn.getAttribute('data-name'));
+  }
+});
 document.getElementById('search-input').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') doSearch();
 });
