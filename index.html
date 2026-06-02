@@ -490,28 +490,43 @@ function closeSearch() {
   currentSearchGenre = null;
 }
 
-async function doSearch() {
+var searchOffset = 0;
+var searchTotal = 0;
+
+async function doSearch(append) {
   const query = document.getElementById('search-input').value.trim();
   if (!query) return;
   const token = await getReadToken() || accessToken;
   if (!token) { alert('Token non disponible'); return; }
 
-  document.getElementById('search-results').innerHTML = '<div class="search-loading">🔍 Recherche en cours…</div>';
+  if (!append) {
+    searchOffset = 0;
+    document.getElementById('search-results').innerHTML = '<div class="search-loading">🔍 Recherche en cours…</div>';
+  } else {
+    // Retirer le bouton "Voir plus" existant
+    var existing = document.getElementById('load-more-btn');
+    if (existing) existing.remove();
+  }
 
   try {
-    const res = await fetch('https://api.spotify.com/v1/search?q=' + encodeURIComponent(query) + '&type=playlist&limit=10&market=FR', {
-      headers: { Authorization: 'Bearer ' + token }
-    });
+    const res = await fetch(
+      'https://api.spotify.com/v1/search?q=' + encodeURIComponent(query) +
+      '&type=playlist&limit=50&offset=' + searchOffset + '&market=FR',
+      { headers: { Authorization: 'Bearer ' + token } }
+    );
     const data = await res.json();
     const playlists = data.playlists ? data.playlists.items.filter(p => p) : [];
+    searchTotal = data.playlists ? data.playlists.total : 0;
+    searchOffset += playlists.length;
+
+    const container = document.getElementById('search-results');
+    if (!append) container.innerHTML = '';
 
     if (!playlists.length) {
-      document.getElementById('search-results').innerHTML = '<div class="search-empty">Aucun résultat trouvé</div>';
+      container.innerHTML = '<div class="search-empty">Aucun résultat trouvé</div>';
       return;
     }
 
-    const container = document.getElementById('search-results');
-    container.innerHTML = '';
     playlists.forEach(function(pl) {
       const img = pl.images && pl.images.length ? pl.images[0].url : '';
       const div = document.createElement('div');
@@ -525,6 +540,17 @@ async function doSearch() {
         '<button class="playlist-select-btn" data-id="' + pl.id + '" data-name="' + pl.name.replace(/"/g,'&quot;') + '">Choisir</button>';
       container.appendChild(div);
     });
+
+    // Bouton "Voir plus" si encore des résultats
+    if (searchOffset < searchTotal) {
+      var moreBtn = document.createElement('button');
+      moreBtn.id = 'load-more-btn';
+      moreBtn.className = 'btn-green';
+      moreBtn.style.cssText = 'margin-top:10px;padding:10px;font-size:13px;border-radius:10px;';
+      moreBtn.textContent = 'Voir plus (' + (searchTotal - searchOffset) + ' résultats restants)';
+      moreBtn.onclick = function() { doSearch(true); };
+      container.appendChild(moreBtn);
+    }
   } catch(e) {
     document.getElementById('search-results').innerHTML = '<div class="search-empty">Erreur : ' + e.message + '</div>';
   }
