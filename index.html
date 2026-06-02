@@ -66,6 +66,22 @@
   .src-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
   .src-label { font-size: 13px; font-weight: 600; min-width: 80px; flex-shrink: 0; }
   .konpa-box { background: rgba(244,63,94,0.06); border: 1px solid rgba(244,63,94,0.2); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem; }
+
+  /* Énergie */
+  .energy-box { background: rgba(251,191,36,0.06); border: 1px solid rgba(251,191,36,0.2); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem; }
+  .energy-box .section-title { color: #fbbf24; }
+  .energy-modes { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.25rem; }
+  .energy-mode-btn { padding: 8px 14px; border-radius: 50px; border: 1px solid var(--border); background: var(--bg3); color: var(--muted); font-size: 13px; cursor: pointer; transition: all .2s; }
+  .energy-mode-btn.active { border-color: #fbbf24; color: #fbbf24; background: rgba(251,191,36,0.1); }
+  .energy-curve { background: var(--bg3); border-radius: 10px; padding: 12px; margin-bottom: 1rem; height: 80px; position: relative; overflow: hidden; }
+  .energy-curve canvas { width: 100%; height: 100%; }
+  .manual-sliders { display: none; }
+  .manual-sliders.visible { display: block; }
+  .rotation-slider { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .rotation-slider label { font-size: 12px; color: var(--muted); min-width: 80px; flex-shrink: 0; }
+  .rotation-slider input[type=range] { flex: 1; -webkit-appearance: none; height: 4px; border-radius: 2px; background: var(--border); outline: none; }
+  .rotation-slider input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #fbbf24; cursor: pointer; }
+  .rotation-slider .energy-emoji { font-size: 16px; min-width: 24px; text-align: center; }
   .konpa-box .section-title { color: var(--ko-color); }
   .time-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
   .timeline-preview { background: var(--bg3); border-radius: 10px; padding: 12px 14px; font-size: 12px; color: var(--muted); font-family: 'Space Mono', monospace; }
@@ -97,6 +113,7 @@
   .track-year { font-size: 11px; padding: 2px 7px; border-radius: 50px; flex-shrink: 0; }
   .track-year.classic { background: rgba(255,255,255,0.07); color: var(--muted); }
   .track-year.recent { background: var(--green-dim); color: var(--green); }
+  .track-bpm { font-size: 11px; color: #1DB954; padding: 2px 7px; background: rgba(29,185,84,0.1); border-radius: 50px; flex-shrink: 0; }
   .track-time { font-size: 11px; color: var(--muted); min-width: 45px; text-align: right; flex-shrink: 0; }
   #status-bar { display: flex; align-items: center; gap: 8px; }
   .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
@@ -281,6 +298,21 @@
         </select>
       </div>
 
+      <!-- SECTION ÉNERGIE -->
+      <div class="energy-box">
+        <div class="section-title">⚡ Courbe d'énergie</div>
+        <div class="energy-modes">
+          <button class="energy-mode-btn active" data-mode="waves" onclick="setEnergyMode('waves',this)">🌊 Vagues</button>
+          <button class="energy-mode-btn" data-mode="pyramid" onclick="setEnergyMode('pyramid',this)">🏔️ Pyramide</button>
+          <button class="energy-mode-btn" data-mode="contrast" onclick="setEnergyMode('contrast',this)">🎭 Contrastes</button>
+          <button class="energy-mode-btn" data-mode="manual" onclick="setEnergyMode('manual',this)">🎯 Manuel</button>
+        </div>
+        <div class="energy-curve">
+          <canvas id="energy-canvas"></canvas>
+        </div>
+        <div class="manual-sliders" id="manual-sliders"></div>
+      </div>
+
       <button class="btn-green" id="gen-btn">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
         Générer la playlist sur Spotify
@@ -383,6 +415,7 @@ function showConfig() {
   document.getElementById('config-section').classList.remove('hidden');
   updateTimeline();
   loadSavedSources();
+  setTimeout(drawEnergyCurve, 100);
 }
 
 async function loadUser() {
@@ -432,11 +465,13 @@ function shuffle(arr) {
   for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}
   return a;
 }
-function addTrackPreview(g,title,artist,year,eraYear,timeStr) {
+function addTrackPreview(g,title,artist,year,eraYear,timeStr,bpmStr,key) {
+  var isRecent = year >= eraYear;
   var el=document.createElement('div'); el.className='track-item';
   el.innerHTML='<span class="track-badge '+g+'">'+g+'</span>'+
     '<div style="flex:1"><div class="track-name">'+title+'</div><div class="track-artist">'+artist+'</div></div>'+
-    '<span class="track-year '+(year>=eraYear?'recent':'classic')+'">'+year+'</span>'+
+    '<span class="track-year '+(isRecent?'recent':'classic')+'">'+year+'</span>'+
+    (bpmStr?'<span class="track-bpm">'+bpmStr+(key?' · '+key:'')+'</span>':'')+
     '<span class="track-time">'+timeStr+'</span>';
   document.getElementById('tracks-preview').appendChild(el);
 }
@@ -510,7 +545,7 @@ async function doSearch(append) {
 
   try {
     const res = await fetch(
-      'https://api.spotify.com/v1/search?q=' + encodeURIComponent(query) + '&type=playlist&limit=50&offset=' + searchOffset + '&market=FR',
+      'https://api.spotify.com/v1/search?q=' + encodeURIComponent(query) + '&type=playlist&limit=10&offset=' + searchOffset + '&market=FR',
       { headers: { Authorization: 'Bearer ' + token } }
     );
     const data = await res.json();
@@ -590,6 +625,262 @@ function loadSavedSources() {
   });
 }
 
+// ── ÉNERGIE ──────────────────────────────────────────────────────────────────
+var energyMode = 'waves';
+var manualLevels = [];
+
+function setEnergyMode(mode, btn) {
+  energyMode = mode;
+  document.querySelectorAll('.energy-mode-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  var ms = document.getElementById('manual-sliders');
+  ms.classList.toggle('visible', mode === 'manual');
+  drawEnergyCurve();
+}
+
+function getEnergyLevels(rotations) {
+  var levels = [];
+  switch(energyMode) {
+    case 'waves':
+      // Sinusoïde : creux → pic → creux → pic
+      for (var i = 0; i < rotations; i++) {
+        levels.push(0.3 + 0.7 * Math.abs(Math.sin(i * Math.PI / 3)));
+      }
+      break;
+    case 'pyramid':
+      // Montée jusqu'au milieu puis descente
+      var mid = (rotations - 1) / 2;
+      for (var i = 0; i < rotations; i++) {
+        levels.push(0.2 + 0.8 * (1 - Math.abs(i - mid) / mid));
+      }
+      break;
+    case 'contrast':
+      // Alternance bas/haut à chaque rotation
+      for (var i = 0; i < rotations; i++) {
+        levels.push(i % 2 === 0 ? 0.85 : 0.25);
+      }
+      break;
+    case 'manual':
+      for (var i = 0; i < rotations; i++) {
+        var slider = document.getElementById('slider-rot-' + i);
+        levels.push(slider ? parseFloat(slider.value) / 5 : 0.5);
+      }
+      break;
+    default:
+      for (var i = 0; i < rotations; i++) levels.push(0.5);
+  }
+  return levels;
+}
+
+function buildManualSliders(rotations) {
+  var container = document.getElementById('manual-sliders');
+  container.innerHTML = '';
+  for (var i = 0; i < rotations; i++) {
+    var val = manualLevels[i] !== undefined ? manualLevels[i] : 3;
+    var emojis = ['😴','😌','🎵','💃','🔥'];
+    var div = document.createElement('div');
+    div.className = 'rotation-slider';
+    div.innerHTML = '<label>Rotation ' + (i+1) + '</label>' +
+      '<input type="range" id="slider-rot-' + i + '" min="1" max="5" value="' + val + '" oninput="updateManualSlider(' + i + ',this)">' +
+      '<span class="energy-emoji" id="emoji-rot-' + i + '">' + emojis[val-1] + '</span>';
+    container.appendChild(div);
+  }
+  drawEnergyCurve();
+}
+
+function updateManualSlider(idx, el) {
+  manualLevels[idx] = parseInt(el.value);
+  var emojis = ['😴','😌','🎵','💃','🔥'];
+  document.getElementById('emoji-rot-' + idx).textContent = emojis[parseInt(el.value)-1];
+  drawEnergyCurve();
+}
+
+function drawEnergyCurve() {
+  var canvas = document.getElementById('energy-canvas');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth || 400;
+  canvas.height = canvas.offsetHeight || 80;
+  
+  var nbS = parseInt(document.getElementById('nb-s').value)||3;
+  var nbB = parseInt(document.getElementById('nb-b').value)||3;
+  var nbK = parseInt(document.getElementById('nb-k').value)||3;
+  var perSBK = nbS + nbB + nbK;
+  var duree = parseInt(document.getElementById('duree').value)||4;
+  var startMin = timeToMinutes(document.getElementById('time-start').value);
+  var konpaMin = timeToMinutes(document.getElementById('time-konpa').value);
+  var off = konpaMin - startMin; if(off<0) off+=1440;
+  var sbkRot = Math.floor(off/(perSBK*4));
+  var nbKo = parseInt(document.getElementById('nb-ko').value)||3;
+  var koRot = Math.ceil((duree*60 - sbkRot*perSBK*4)/(nbKo*4));
+  var totalRot = sbkRot + koRot;
+
+  if (energyMode === 'manual') buildManualSliders(totalRot);
+
+  var levels = getEnergyLevels(totalRot);
+  var W = canvas.width, H = canvas.height;
+  var pad = 8;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Gradient de fond
+  var grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, 'rgba(251,191,36,0.3)');
+  grad.addColorStop(1, 'rgba(251,191,36,0.02)');
+
+  // Tracer la courbe
+  ctx.beginPath();
+  for (var i = 0; i < levels.length; i++) {
+    var x = pad + (i / (levels.length - 1 || 1)) * (W - pad*2);
+    var y = H - pad - levels[i] * (H - pad*2);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  // Fermer pour le remplissage
+  ctx.lineTo(W - pad, H - pad);
+  ctx.lineTo(pad, H - pad);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Ligne principale
+  ctx.beginPath();
+  for (var i = 0; i < levels.length; i++) {
+    var x = pad + (i / (levels.length - 1 || 1)) * (W - pad*2);
+    var y = H - pad - levels[i] * (H - pad*2);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.strokeStyle = '#fbbf24';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Points
+  for (var i = 0; i < levels.length; i++) {
+    var x = pad + (i / (levels.length - 1 || 1)) * (W - pad*2);
+    var y = H - pad - levels[i] * (H - pad*2);
+    var isKonpa = i >= sbkRot;
+    ctx.beginPath();
+    ctx.arc(x, y, 4, 0, Math.PI*2);
+    ctx.fillStyle = isKonpa ? '#f43f5e' : '#fbbf24';
+    ctx.fill();
+  }
+
+  // Label Konpa
+  if (koRot > 0 && sbkRot > 0) {
+    var kx = pad + (sbkRot / (levels.length - 1 || 1)) * (W - pad*2);
+    ctx.beginPath();
+    ctx.moveTo(kx, pad);
+    ctx.lineTo(kx, H - pad);
+    ctx.strokeStyle = 'rgba(244,63,94,0.4)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4,4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#f43f5e';
+    ctx.font = '10px Space Mono, monospace';
+    ctx.fillText('KONPA', kx + 4, 14);
+  }
+}
+
+// ── BPM ──────────────────────────────────────────────────────────────────────
+async function fetchBPMs(uris) {
+  // Extraire les IDs Spotify depuis les URIs
+  var ids = uris.map(function(uri) { return uri.replace('spotify:track:', ''); });
+  try {
+    var res = await fetch('https://dj.anwadance.com/bpm.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: ids })
+    });
+    var data = await res.json();
+    return data.results || {};
+  } catch(e) {
+    console.log('BPM fetch error:', e);
+    return {};
+  }
+}
+
+function sortByBPM(list, bpmData, sbkRot, koRot) {
+  // Assigner le BPM à chaque titre
+  list.forEach(function(item) {
+    if (!item.track) return;
+    var id = item.track.uri.replace('spotify:track:', '');
+    var info = bpmData[id];
+    item.bpm = info && info.bpm ? parseFloat(info.bpm) : null;
+    item.key = info && info.key ? info.key : null;
+  });
+
+  // Séparer SBK et Konpa
+  var sbkList = list.filter(function(i){ return i.g !== 'KO'; });
+  var koList = list.filter(function(i){ return i.g === 'KO'; });
+
+  // Obtenir les niveaux d'énergie
+  var totalRot = sbkRot + koRot;
+  var levels = getEnergyLevels(totalRot);
+
+  // Pour chaque genre SBK, trier par BPM
+  var genresSBK = ['K', 'B', 'S'];
+  var grouped = {};
+  genresSBK.forEach(function(g) { grouped[g] = []; });
+  sbkList.forEach(function(item) {
+    if (grouped[item.g]) grouped[item.g].push(item);
+  });
+
+  // Trier chaque genre par BPM croissant
+  genresSBK.forEach(function(g) {
+    grouped[g].sort(function(a, b) {
+      if (!a.bpm) return 1;
+      if (!b.bpm) return -1;
+      return a.bpm - b.bpm;
+    });
+  });
+
+  // Répartir par rotation selon la courbe d'énergie
+  var titlesPerRot = {};
+  genresSBK.forEach(function(g) {
+    var pool = grouped[g];
+    var n = pool.length;
+    var rotCount = Math.ceil(n / genresSBK.length);
+    // Assigner à chaque rotation selon niveau d'énergie
+    for (var r = 0; r < sbkRot; r++) {
+      if (!titlesPerRot[r]) titlesPerRot[r] = [];
+      var level = levels[r];
+      // Prendre les titres dont le BPM correspond au niveau d'énergie
+      var idx = Math.floor(level * (pool.length - 1));
+      if (pool[idx]) titlesPerRot[r].push(pool[idx]);
+    }
+  });
+
+  // Reconstruire la liste SBK par rotation
+  var sortedSBK = [];
+  for (var r = 0; r < sbkRot; r++) {
+    if (titlesPerRot[r]) {
+      titlesPerRot[r].forEach(function(item) { sortedSBK.push(item); });
+    }
+  }
+
+  // Si le tri est trop complexe, fallback simple par BPM + genre
+  if (sortedSBK.length < sbkList.length * 0.5) {
+    sortedSBK = [];
+    var maxLen = Math.max.apply(null, genresSBK.map(function(g){ return grouped[g].length; }));
+    for (var i = 0; i < maxLen; i++) {
+      genresSBK.forEach(function(g) {
+        if (grouped[g][i]) sortedSBK.push(grouped[g][i]);
+      });
+    }
+  }
+
+  // Trier Konpa par BPM selon la courbe d'énergie de la phase Konpa
+  koList.sort(function(a, b) {
+    if (!a.bpm) return 1;
+    if (!b.bpm) return -1;
+    return a.bpm - b.bpm;
+  });
+
+  return sortedSBK.concat(koList);
+}
+
 async function generatePlaylist() {
   if (!await ensureToken()) return;
   var btn=document.getElementById('gen-btn'); btn.disabled=true;
@@ -650,6 +941,18 @@ async function generatePlaylist() {
     }
 
     log('📋 '+list.length+' titres · '+sbkRot+' rotations SBK + '+koRot+' rotations Konpa','info');
+
+    // Récupérer les BPM
+    log('🎵 Récupération des BPM via Songstats…','info');
+    var uris = list.filter(function(i){return i.track;}).map(function(i){return i.track.uri;});
+    var bpmData = await fetchBPMs(uris);
+    var bpmCount = Object.values(bpmData).filter(function(d){return d.bpm;}).length;
+    log('✓ BPM récupérés : '+bpmCount+'/'+uris.length+' titres','ok');
+
+    // Trier par BPM
+    list = sortByBPM(list, bpmData, sbkRot, koRot);
+    log('✓ Playlist triée par BPM progressif (Kizomba → Bachata → Salsa → Konpa)','ok');
+
     log('🔨 Création de la playlist…','info');
 
     var cr=await fetch('https://api.spotify.com/v1/me/playlists',{method:'POST',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},body:JSON.stringify({name:name,description:'Playlist ANWA DJ — '+new Date().toLocaleDateString('fr-FR'),public:true})});
@@ -663,7 +966,9 @@ async function generatePlaylist() {
         uris.push(item.track.uri);
         var tm=((startMin+idx*4)%1440+1440)%1440;
         var h=Math.floor(tm/60)%24,mn=tm%60;
-        addTrackPreview(item.g,item.track.name,item.track.artist,item.track.year,eraYear,(h<10?'0':'')+h+'h'+(mn<10?'0':'')+mn);
+        var timeStr=(h<10?'0':'')+h+'h'+(mn<10?'0':'')+mn;
+        var bpmStr=item.bpm?Math.round(item.bpm)+' BPM':'—';
+        addTrackPreview(item.g,item.track.name,item.track.artist,item.track.year,eraYear,timeStr,bpmStr,item.key||'');
       }
     });
     setProgress(80);
@@ -710,6 +1015,12 @@ document.getElementById('search-modal').addEventListener('click', function(e) {
   });
 });
 document.getElementById('gen-btn').addEventListener('click', generatePlaylist);
+
+// Redessiner la courbe quand les paramètres changent
+['duree','nb-s','nb-b','nb-k','nb-ko','time-start','time-konpa'].forEach(function(id) {
+  var el = document.getElementById(id);
+  if (el) el.addEventListener('change', drawEnergyCurve);
+});
 
 window.addEventListener('load', async function() {
   var params=new URLSearchParams(window.location.search);
