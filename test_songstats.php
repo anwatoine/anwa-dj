@@ -1,23 +1,24 @@
 <?php
-function getBPM($spotify_id, $idUnique = '') {
-    // Étape 1 : Résoudre via songstats.com/t/
-    $ch = curl_init('https://songstats.com/t/' . $spotify_id);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-    curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
-    $response = curl_exec($ch);
-    $finalUrl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
-    curl_close($ch);
+$spotify_id = '1EMci9LycCKIO2X58jZPJ6'; // Loco - DJ Husky
 
-    if (!preg_match('/songstats\.com\/track\/([a-z0-9]+)\//i', $finalUrl, $m)) {
-        return "❌ Songstats ID non trouvé";
-    }
+// Étape 1 : Résoudre via songstats.com/t/
+$ch = curl_init('https://songstats.com/t/' . $spotify_id);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
+curl_exec($ch);
+$finalUrl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
+curl_close($ch);
+
+echo "Final URL: $finalUrl\n";
+
+if (preg_match('/songstats\.com\/track\/([a-z0-9]+)\//i', $finalUrl, $m)) {
     $songstats_id = $m[1];
+    echo "Songstats ID: $songstats_id\n\n";
 
-    // Étape 2 : Récupérer le BPM
-    $params = 'source=overview' . ($idUnique ? '&idUnique=' . $idUnique : '');
-    $ch2 = curl_init('https://data.songstats.com/api/v1/analytics_track/' . $songstats_id . '/top?' . $params);
+    // Étape 2 : Récupérer BPM
+    $ch2 = curl_init('https://data.songstats.com/api/v1/analytics_track/' . $songstats_id . '/top?source=overview');
     curl_setopt($ch2, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch2, CURLOPT_TIMEOUT, 10);
     curl_setopt($ch2, CURLOPT_USERAGENT, 'Mozilla/5.0');
@@ -27,26 +28,15 @@ function getBPM($spotify_id, $idUnique = '') {
     curl_close($ch2);
 
     if (isset($data['overviewInfo']['audioFeatureData']['summaryItems'])) {
-        $result = "✅ $songstats_id — ";
+        echo "✅ BPM trouvé !\n";
         foreach ($data['overviewInfo']['audioFeatureData']['summaryItems'] as $item) {
-            $result .= $item['name'] . ': ' . $item['displayValue'] . ' | ';
+            echo $item['name'] . ': ' . $item['displayValue'] . "\n";
         }
-        return $result;
+    } else {
+        echo "❌ Pas de BPM dans la réponse\n";
+        echo "Réponse: " . substr(json_encode($data), 0, 300) . "\n";
     }
-    return "❌ BPM non trouvé (songstats_id: $songstats_id)";
-}
-
-$spotify_ids = [
-    '3QHMxEOAGD51PDlbFPHLyJ', // Vivir Mi Vida
-    '7scFxt9VhL4FJwuPSfRlfN', // Test Tunebat
-];
-
-echo "=== SANS idUnique ===\n";
-foreach ($spotify_ids as $id) {
-    echo $id . ': ' . getBPM($id) . "\n";
-}
-
-echo "\n=== AVEC idUnique ===\n";
-foreach ($spotify_ids as $id) {
-    echo $id . ': ' . getBPM($id, 'sb042k69') . "\n";
+} else {
+    echo "❌ Songstats ID non trouvé — titre probablement pas indexé\n";
+    echo "URL finale: $finalUrl\n";
 }
