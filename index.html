@@ -67,6 +67,19 @@
   .src-label { font-size: 13px; font-weight: 600; min-width: 80px; flex-shrink: 0; }
   .konpa-box { background: rgba(244,63,94,0.06); border: 1px solid rgba(244,63,94,0.2); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem; }
 
+  /* Token status */
+  .token-status { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 10px; margin-bottom: 1rem; font-size: 13px; }
+  .token-status.ok { background: rgba(29,185,84,0.1); border: 1px solid rgba(29,185,84,0.3); color: #1DB954; }
+  .token-status.warn { background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.3); color: #fbbf24; }
+  .token-status.error { background: rgba(244,63,94,0.1); border: 1px solid rgba(244,63,94,0.3); color: #f43f5e; }
+  .token-status .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .token-status.ok .dot { background: #1DB954; box-shadow: 0 0 6px #1DB954; }
+  .token-status.warn .dot { background: #fbbf24; box-shadow: 0 0 6px #fbbf24; animation: pulse 1.5s infinite; }
+  .token-status.error .dot { background: #f43f5e; box-shadow: 0 0 6px #f43f5e; animation: pulse 1s infinite; }
+  .token-renew-btn { margin-left: auto; padding: 5px 12px; border-radius: 20px; border: 1px solid currentColor; background: transparent; color: inherit; font-size: 11px; cursor: pointer; text-decoration: none; }
+  .token-renew-btn:hover { opacity: 0.8; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
   /* Énergie */
   .energy-box { background: rgba(251,191,36,0.06); border: 1px solid rgba(251,191,36,0.2); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem; }
   .energy-box .section-title { color: #fbbf24; }
@@ -209,6 +222,13 @@
             <option value="4" selected>4 heures</option><option value="5">5 heures</option><option value="6">6 heures</option>
           </select>
         </div>
+      </div>
+
+      <!-- TOKEN STATUS -->
+      <div id="token-status-bar" class="token-status ok">
+        <div class="dot"></div>
+        <span id="token-status-text">Token Songstats actif</span>
+        <a href="https://developer.spotify.com/console/post-playlists" target="_blank" class="token-renew-btn" id="token-renew-btn">🔄 Renouveler</a>
       </div>
 
       <div class="section-title">Playlists sources Spotify</div>
@@ -420,6 +440,7 @@ function showConfig() {
   updateTimeline();
   loadSavedSources();
   setTimeout(drawEnergyCurve, 100);
+  startTokenMonitor();
 }
 
 async function loadUser() {
@@ -627,6 +648,62 @@ function loadSavedSources() {
       if (saved[g].name) document.getElementById('sel-' + g).textContent = '✓ ' + saved[g].name;
     }
   });
+}
+
+// ── TOKEN STATUS ─────────────────────────────────────────────────────────────
+var tokenCheckInterval = null;
+
+function updateTokenStatus(status, message) {
+  var bar = document.getElementById('token-status-bar');
+  var text = document.getElementById('token-status-text');
+  if (!bar || !text) return;
+  bar.className = 'token-status ' + status;
+  text.textContent = message;
+}
+
+async function checkTokenStatus() {
+  try {
+    var token = await getReadToken();
+    if (!token) {
+      updateTokenStatus('error', '⚠️ Token expiré — cliquez Renouveler');
+      return false;
+    }
+    // Tester le token sur un appel léger
+    var res = await fetch('https://api.spotify.com/v1/me', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    if (res.status === 401 || res.status === 403) {
+      updateTokenStatus('error', '⚠️ Token invalide — cliquez Renouveler');
+      return false;
+    }
+    // Vérifier l'expiration (token dure 1h)
+    var info = await getTokenInfo();
+    if (info && info.expires_in < 600) { // moins de 10 min
+      updateTokenStatus('warn', '⏱️ Token expire bientôt — pensez à Renouveler');
+    } else {
+      var mins = info ? Math.floor(info.expires_in / 60) : '?';
+      updateTokenStatus('ok', '✅ Token actif — expire dans ~' + mins + ' min');
+    }
+    return true;
+  } catch(e) {
+    updateTokenStatus('warn', '⚠️ Impossible de vérifier le token');
+    return false;
+  }
+}
+
+async function getTokenInfo() {
+  try {
+    var res = await fetch('https://dj.anwadance.com/admin.php');
+    var data = await res.json();
+    return data.success ? data : null;
+  } catch(e) { return null; }
+}
+
+// Vérifier toutes les 5 minutes
+function startTokenMonitor() {
+  checkTokenStatus();
+  if (tokenCheckInterval) clearInterval(tokenCheckInterval);
+  tokenCheckInterval = setInterval(checkTokenStatus, 5 * 60 * 1000);
 }
 
 // ── ÉNERGIE ──────────────────────────────────────────────────────────────────
@@ -1090,6 +1167,11 @@ async function generatePlaylist() {
       for(var i=0;i<reKo;i++) list.push({g:'KO',track:koR[(r*reKo+i)%(koR.length||1)]});
     }
 
+    if (list.length === 0) {
+      log('❌ Aucun titre chargé — token expiré ? Cliquez sur Renouveler en haut de la page.', 'error');
+      updateTokenStatus('error', '⚠️ Token expiré — cliquez Renouveler');
+      return;
+    }
     log('📋 '+list.length+' titres · '+sbkRot+' rotations SBK + '+koRot+' rotations Konpa','info');
 
     // Récupérer les BPM
