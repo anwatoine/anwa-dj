@@ -916,84 +916,119 @@ async function fetchBPMs(uris) {
   }
 }
 
+// Compatibilité Camelot : retourne un score (0=incompatible, 1=ok, 2=parfait)
+function camelotScore(a, b) {
+  if (!a || !b) return 0;
+  var numA = parseInt(a), numB = parseInt(b);
+  var letA = a.slice(-1), letB = b.slice(-1);
+  if (isNaN(numA) || isNaN(numB)) return 0;
+  if (numA === numB && letA === letB) return 2; // identique = parfait
+  if (numA === numB && letA !== letB) return 1; // même chiffre, lettre différente = ok
+  var diff = Math.abs(numA - numB);
+  if (diff === 1 || diff === 11) return letA === letB ? 2 : 1; // adjacent = bon
+  return 0;
+}
+
+// Réordonner un tableau selon Camelot (greedy nearest neighbor)
+function reorderByCamelot(items) {
+  if (items.length <= 1) return items;
+  var remaining = items.slice();
+  var result = [remaining.splice(0, 1)[0]];
+  while (remaining.length > 0) {
+    var last = result[result.length - 1];
+    var bestIdx = 0, bestScore = -1;
+    for (var i = 0; i < remaining.length; i++) {
+      // Score combiné : Camelot + BPM proche
+      var cScore = camelotScore(last.camelot, remaining[i].camelot) * 100;
+      var bpmDiff = last.bpm && remaining[i].bpm ? Math.abs(last.bpm - remaining[i].bpm) : 50;
+      var totalScore = cScore - bpmDiff;
+      if (totalScore > bestScore) { bestScore = totalScore; bestIdx = i; }
+    }
+    result.push(remaining.splice(bestIdx, 1)[0]);
+  }
+  return result;
+}
+
 function sortByBPM(list, bpmData, sbkRot, koRot) {
-  // Assigner le BPM à chaque titre
+  // Étape 1 : Assigner BPM, Key et Camelot à chaque titre
   list.forEach(function(item) {
     if (!item.track) return;
     var id = item.track.uri.replace('spotify:track:', '');
     var info = bpmData[id];
     item.bpm = info && info.bpm ? parseFloat(info.bpm) : null;
     item.key = info && info.key ? info.key : null;
+    item.camelot = info && info.camelot ? info.camelot : null;
   });
 
-  // Séparer SBK et Konpa
-  var sbkList = list.filter(function(i){ return i.g !== 'KO'; });
-  var koList = list.filter(function(i){ return i.g === 'KO'; });
-
-  // Obtenir les niveaux d'énergie
+  // Étape 2 : Obtenir les niveaux d'énergie par rotation
   var totalRot = sbkRot + koRot;
   var levels = getEnergyLevels(totalRot);
 
-  // Pour chaque genre SBK, trier par BPM
-  var genresSBK = ['K', 'B', 'S'];
-  var grouped = {};
-  genresSBK.forEach(function(g) { grouped[g] = []; });
-  sbkList.forEach(function(item) {
-    if (grouped[item.g]) grouped[item.g].push(item);
-  });
+  // Étape 3 : Reconstruire la liste EN RESPECTANT la structure rotation 3-3-3
+  // La liste est déjà organisée par rotation : [S S S B B B K K K] [S S S B B B K K K]...
+  // On détecte la taille d'un bloc rotation
+  var perSBKBlock = 0;
+  if (list.length > 0) {
+    var firstG = list[0].g;
+    var idx = 0;
+    // Compter les titres de la première rotation jusqu'au changement de cycle
+    // On utilise le fait que la liste alterne S...B...K... par rotation
+    var genres = [];
+    list.forEach(function(item) { if(item.g !== 'KO') genres.push(item.g); });
+    // Détecter la longueur d'un bloc SBK
+    if (sbkRot > 0) perSBKBlock = Math.floor(genres.length / sbkRot);
+  }
 
-  // Trier chaque genre par BPM croissant
-  genresSBK.forEach(function(g) {
-    grouped[g].sort(function(a, b) {
+  var sorted = [];
+
+  // Traiter chaque rotation SBK
+  for (var r = 0; r < sbkRot; r++) {
+    // Extraire les titres de cette rotation
+    var rotStart = r * perSBKBlock;
+    var rotItems = list.slice(rotStart, rotStart + perSBKBlock);
+
+    // Séparer par genre dans cette rotation
+    var byGenre = { S: [], B: [], K: [] };
+    rotItems.forEach(function(item) {
+      if (byGenre[item.g]) byGenre[item.g].push(item);
+    });
+
+    // Niveau d'énergie de cette rotation
+    var level = levels[r]; // 0 = calme, 1 = peak
+
+    // Trier chaque genre par BPM selon le niveau d'énergie puis optimiser par Camelot
+    ['S', 'B', 'K'].forEach(function(g) {
+      // 1. Tri BPM selon énergie
+      byGenre[g].sort(function(a, b) {
+        if (!a.bpm) return 1;
+        if (!b.bpm) return -1;
+        return level >= 0.5 ? b.bpm - a.bpm : a.bpm - b.bpm;
+      });
+      // 2. Réordonner par Camelot (en conservant l'ordre BPM comme base)
+      byGenre[g] = reorderByCamelot(byGenre[g]);
+    });
+
+    // Reconstruire la rotation en respectant l'ordre S → B → K
+    ['S', 'B', 'K'].forEach(function(g) {
+      byGenre[g].forEach(function(item) { sorted.push(item); });
+    });
+  }
+
+  // Traiter les rotations Konpa
+  var koItems = list.filter(function(i){ return i.g === 'KO'; });
+  for (var r = 0; r < koRot; r++) {
+    var level = levels[sbkRot + r];
+    var rotKo = koItems.slice(r * Math.ceil(koItems.length / koRot),
+                              (r+1) * Math.ceil(koItems.length / koRot));
+    rotKo.sort(function(a, b) {
       if (!a.bpm) return 1;
       if (!b.bpm) return -1;
-      return a.bpm - b.bpm;
+      return level >= 0.5 ? b.bpm - a.bpm : a.bpm - b.bpm;
     });
-  });
-
-  // Répartir par rotation selon la courbe d'énergie
-  var titlesPerRot = {};
-  genresSBK.forEach(function(g) {
-    var pool = grouped[g];
-    var n = pool.length;
-    var rotCount = Math.ceil(n / genresSBK.length);
-    // Assigner à chaque rotation selon niveau d'énergie
-    for (var r = 0; r < sbkRot; r++) {
-      if (!titlesPerRot[r]) titlesPerRot[r] = [];
-      var level = levels[r];
-      // Prendre les titres dont le BPM correspond au niveau d'énergie
-      var idx = Math.floor(level * (pool.length - 1));
-      if (pool[idx]) titlesPerRot[r].push(pool[idx]);
-    }
-  });
-
-  // Reconstruire la liste SBK par rotation
-  var sortedSBK = [];
-  for (var r = 0; r < sbkRot; r++) {
-    if (titlesPerRot[r]) {
-      titlesPerRot[r].forEach(function(item) { sortedSBK.push(item); });
-    }
+    rotKo.forEach(function(item) { sorted.push(item); });
   }
 
-  // Si le tri est trop complexe, fallback simple par BPM + genre
-  if (sortedSBK.length < sbkList.length * 0.5) {
-    sortedSBK = [];
-    var maxLen = Math.max.apply(null, genresSBK.map(function(g){ return grouped[g].length; }));
-    for (var i = 0; i < maxLen; i++) {
-      genresSBK.forEach(function(g) {
-        if (grouped[g][i]) sortedSBK.push(grouped[g][i]);
-      });
-    }
-  }
-
-  // Trier Konpa par BPM selon la courbe d'énergie de la phase Konpa
-  koList.sort(function(a, b) {
-    if (!a.bpm) return 1;
-    if (!b.bpm) return -1;
-    return a.bpm - b.bpm;
-  });
-
-  return sortedSBK.concat(koList);
+  return sorted;
 }
 
 async function generatePlaylist() {
@@ -1083,7 +1118,8 @@ async function generatePlaylist() {
         var h=Math.floor(tm/60)%24,mn=tm%60;
         var timeStr=(h<10?'0':'')+h+'h'+(mn<10?'0':'')+mn;
         var bpmStr=item.bpm?Math.round(item.bpm)+' BPM':'—';
-        addTrackPreview(item.g,item.track.name,item.track.artist,item.track.year,eraYear,timeStr,bpmStr,item.key||'');
+        var camelotStr=item.camelot||'';
+        addTrackPreview(item.g,item.track.name,item.track.artist,item.track.year,eraYear,timeStr,bpmStr,camelotStr);
       }
     });
     setProgress(80);

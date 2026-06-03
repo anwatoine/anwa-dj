@@ -52,16 +52,35 @@ foreach ($spotify_ids as $spotify_id) {
     $data = json_decode(curl_exec($ch2), true);
     curl_close($ch2);
 
-    $bpm = null; $key = null; $duration = null;
+    $bpm = null; $key = null; $duration = null; $camelot = null;
+
+// Table de conversion Key → Camelot
+$camelotMap = [
+    'C' => '8B', 'C#' => '3B', 'Db' => '3B',
+    'D' => '10B', 'D#' => '5B', 'Eb' => '5B',
+    'E' => '12B', 'F' => '7B', 'F#' => '2B', 'Gb' => '2B',
+    'G' => '9B', 'G#' => '4B', 'Ab' => '4B',
+    'A' => '11B', 'A#' => '6B', 'Bb' => '6B', 'B' => '1B',
+    // Mineures
+    'Cm' => '5A', 'C#m' => '12A', 'Dbm' => '12A',
+    'Dm' => '7A', 'D#m' => '2A', 'Ebm' => '2A',
+    'Em' => '9A', 'Fm' => '4A', 'F#m' => '11A', 'Gbm' => '11A',
+    'Gm' => '6A', 'G#m' => '1A', 'Abm' => '1A',
+    'Am' => '8A', 'A#m' => '3A', 'Bbm' => '3A', 'Bm' => '10A',
+];
     if (isset($data['overviewInfo']['audioFeatureData']['summaryItems'])) {
         foreach ($data['overviewInfo']['audioFeatureData']['summaryItems'] as $item) {
             if ($item['key'] === 'tempo') $bpm = $item['value'];
             if ($item['key'] === 'key') $key = $item['value'];
             if ($item['key'] === 'duration') $duration = $item['value'];
         }
+        // Convertir Key en Camelot
+        if ($key && isset($camelotMap[$key])) {
+            $camelot = $camelotMap[$key];
+        }
     }
 
-    $entry = ['bpm' => $bpm, 'key' => $key, 'duration' => $duration, 'songstats_id' => $songstats_id];
+    $entry = ['bpm' => $bpm, 'key' => $key, 'camelot' => $camelot, 'duration' => $duration, 'songstats_id' => $songstats_id];
     $results[$spotify_id] = $entry;
     $cache[$spotify_id] = $entry;
     $new_entries = true;
