@@ -728,18 +728,19 @@ function setEnergyMode(mode, btn) {
 }
 
 function getRotationParams() {
-  var nbS = parseInt(document.getElementById('nb-s').value)||3;
-  var nbB = parseInt(document.getElementById('nb-b').value)||3;
-  var nbK = parseInt(document.getElementById('nb-k').value)||3;
+  var nbS = parseInt(document.getElementById('nb-s').value) || 0;
+  var nbB = parseInt(document.getElementById('nb-b').value) || 0;
+  var nbK = parseInt(document.getElementById('nb-k').value) || 0;
   var perSBK = nbS + nbB + nbK;
-  var duree = parseInt(document.getElementById('duree').value)||4;
+  if (perSBK === 0) perSBK = 1; // éviter division par zéro
+  var duree = parseInt(document.getElementById('duree').value) || 4;
   var startMin = timeToMinutes(document.getElementById('time-start').value);
   var konpaMin = timeToMinutes(document.getElementById('time-konpa').value);
   var off = konpaMin - startMin; if(off<0) off+=1440;
   var sbkRot = Math.floor(off/(perSBK*4));
-  var nbKo = parseInt(document.getElementById('nb-ko').value)||3;
+  var nbKo = parseInt(document.getElementById('nb-ko').value) || 3;
   var koRot = Math.ceil((duree*60 - sbkRot*perSBK*4)/(nbKo*4));
-  return { sbkRot: sbkRot, koRot: koRot, totalRot: sbkRot+koRot, startMin: startMin, duree: duree, perSBK: perSBK, nbKo: nbKo };
+  return { sbkRot: sbkRot, koRot: koRot, totalRot: sbkRot+koRot, startMin: startMin, duree: duree, perSBK: perSBK, nbKo: nbKo, nbS: nbS, nbB: nbB, nbK: nbK };
 }
 
 function getEnergyLevels(totalRot) {
@@ -1114,14 +1115,14 @@ async function generatePlaylist() {
   var name=document.getElementById('playlist-name').value||'ANWA SBK';
   var duree=parseInt(document.getElementById('duree').value);
   var eraYear=parseInt(document.getElementById('era-year').value);
-  var nbS=parseInt(document.getElementById('nb-s').value),clS=parseInt(document.getElementById('cl-s').value),reS=parseInt(document.getElementById('re-s').value);
-  var nbB=parseInt(document.getElementById('nb-b').value),clB=parseInt(document.getElementById('cl-b').value),reB=parseInt(document.getElementById('re-b').value);
-  var nbK=parseInt(document.getElementById('nb-k').value),clK=parseInt(document.getElementById('cl-k').value),reK=parseInt(document.getElementById('re-k').value);
-  var nbKo=parseInt(document.getElementById('nb-ko').value),clKo=parseInt(document.getElementById('cl-ko').value),reKo=parseInt(document.getElementById('re-ko').value);
+  var nbS=parseInt(document.getElementById('nb-s').value)||0,clS=parseInt(document.getElementById('cl-s').value)||0,reS=parseInt(document.getElementById('re-s').value)||0;
+  var nbB=parseInt(document.getElementById('nb-b').value)||0,clB=parseInt(document.getElementById('cl-b').value)||0,reB=parseInt(document.getElementById('re-b').value)||0;
+  var nbK=parseInt(document.getElementById('nb-k').value)||0,clK=parseInt(document.getElementById('cl-k').value)||0,reK=parseInt(document.getElementById('re-k').value)||0;
+  var nbKo=parseInt(document.getElementById('nb-ko').value)||3,clKo=parseInt(document.getElementById('cl-ko').value)||0,reKo=parseInt(document.getElementById('re-ko').value)||0;
   var startMin=timeToMinutes(document.getElementById('time-start').value);
   var konpaMin=timeToMinutes(document.getElementById('time-konpa').value);
   var off=konpaMin-startMin; if(off<0)off+=1440;
-  var perSBK=nbS+nbB+nbK, sbkRot=Math.floor(off/(perSBK*4)), sbkDur=sbkRot*perSBK*4;
+  var perSBK=nbS+nbB+nbK||1, sbkRot=perSBK>0?Math.floor(off/(perSBK*4)):0, sbkDur=sbkRot*perSBK*4;
   var koRot=Math.ceil((duree*60-sbkDur)/(nbKo*4));
   var idS=extractId(document.getElementById('src-s').value);
   var idB=extractId(document.getElementById('src-b').value);
@@ -1155,12 +1156,12 @@ async function generatePlaylist() {
 
     var list=[];
     for(var r=0;r<sbkRot;r++){
-      for(var i=0;i<clS;i++) list.push({g:'S',track:sC[(r*clS+i)%(sC.length||1)]});
-      for(var i=0;i<reS;i++) list.push({g:'S',track:sR[(r*reS+i)%(sR.length||1)]});
-      for(var i=0;i<clB;i++) list.push({g:'B',track:bC[(r*clB+i)%(bC.length||1)]});
-      for(var i=0;i<reB;i++) list.push({g:'B',track:bR[(r*reB+i)%(bR.length||1)]});
-      for(var i=0;i<clK;i++) list.push({g:'K',track:kC[(r*clK+i)%(kC.length||1)]});
-      for(var i=0;i<reK;i++) list.push({g:'K',track:kR[(r*reK+i)%(kR.length||1)]});
+      if(nbS>0){ for(var i=0;i<clS;i++) list.push({g:'S',track:sC[(r*clS+i)%(sC.length||1)]}); }
+      if(nbS>0){ for(var i=0;i<reS;i++) list.push({g:'S',track:sR[(r*reS+i)%(sR.length||1)]}); }
+      if(nbB>0){ for(var i=0;i<clB;i++) list.push({g:'B',track:bC[(r*clB+i)%(bC.length||1)]}); }
+      if(nbB>0){ for(var i=0;i<reB;i++) list.push({g:'B',track:bR[(r*reB+i)%(bR.length||1)]}); }
+      if(nbK>0){ for(var i=0;i<clK;i++) list.push({g:'K',track:kC[(r*clK+i)%(kC.length||1)]}); }
+      if(nbK>0){ for(var i=0;i<reK;i++) list.push({g:'K',track:kR[(r*reK+i)%(kR.length||1)]}); }
     }
     for(var r=0;r<koRot;r++){
       for(var i=0;i<clKo;i++) list.push({g:'KO',track:koC[(r*clKo+i)%(koC.length||1)]});
