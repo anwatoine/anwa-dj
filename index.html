@@ -1199,31 +1199,22 @@ function reorderByCamelot(items) {
 }
 
 function sortByBPM(list, bpmData, sbkRot, koRot) {
-  // BPM moyens par genre (fallback si Songstats ne trouve pas)
-  var bpmDefaults = {
-    'S':  { bpm: 185, key: 'A',  camelot: '11B' },
-    'B':  { bpm: 126, key: 'F',  camelot: '4A'  },
-    'K':  { bpm: 80,  key: 'C',  camelot: '5A'  },
-    'KO': { bpm: 128, key: 'F',  camelot: '6A'  }
-  };
-
   // Étape 1 : Assigner BPM, Key et Camelot à chaque titre
   list.forEach(function(item) {
     if (!item.track) return;
     var id = item.track.uri.replace('spotify:track:', '');
     var info = bpmData[id];
     if (info && info.bpm) {
-      // Données réelles Songstats
+      // Données réelles Songstats/MeloData/Manuel
       item.bpm = parseFloat(info.bpm);
       item.key = info.key || null;
       item.camelot = info.camelot || null;
       item.bpmFallback = false;
     } else {
-      // Fallback par genre
-      var def = bpmDefaults[item.g] || { bpm: 120, key: 'C', camelot: '8B' };
-      item.bpm = def.bpm;
-      item.key = def.key;
-      item.camelot = def.camelot;
+      // Pas de BPM trouvé — laisser null pour le workflow manuel
+      item.bpm = null;
+      item.key = null;
+      item.camelot = null;
       item.bpmFallback = true;
     }
   });
