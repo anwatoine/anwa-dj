@@ -136,7 +136,7 @@ foreach ($spotify_ids as $spotify_id) {
         $results[$spotify_id] = $entry;
         $cache[$spotify_id] = $entry;
         $cache_updated = true;
-        usleep(200000);
+        usleep(50000);
         continue;
     }
 
