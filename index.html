@@ -756,21 +756,23 @@ async function createTempBPMPlaylist(missingItems) {
 
   // Afficher le lien
   var panel = document.getElementById('missing-panel');
-  var link = document.createElement('a');
-  link.href = 'https://open.spotify.com/playlist/' + playlist.id;
-  link.target = '_blank';
-  link.className = 'btn-green';
-  link.style.cssText = 'font-size:13px;padding:8px 16px;text-decoration:none;background:#1a78c2;';
-  link.textContent = '📱 Ouvrir sur Spotify';
-  panel.querySelector('div:last-child').appendChild(link);
+  var actions = document.getElementById('missing-actions');
+  if (actions) {
+    var link = document.createElement('a');
+    link.href = 'https://open.spotify.com/playlist/' + playlist.id;
+    link.target = '_blank';
+    link.className = 'btn-green';
+    link.style.cssText = 'font-size:13px;padding:8px 16px;text-decoration:none;background:#1a78c2;';
+    link.textContent = '📱 Ouvrir sur Spotify';
+    actions.appendChild(link);
 
-  // Bouton supprimer la temp
-  var delBtn = document.createElement('button');
-  delBtn.textContent = '🗑️ Supprimer playlist temp';
-  delBtn.className = 'btn-green';
-  delBtn.style.cssText = 'font-size:13px;padding:8px 16px;background:rgba(244,63,94,0.2);border:1px solid #f43f5e;color:#f43f5e;';
-  delBtn.onclick = deleteTempPlaylist;
-  panel.querySelector('div:last-child').appendChild(delBtn);
+    var delBtn = document.createElement('button');
+    delBtn.textContent = '🗑️ Supprimer playlist temp';
+    delBtn.className = 'btn-green';
+    delBtn.style.cssText = 'font-size:13px;padding:8px 16px;background:rgba(244,63,94,0.2);border:1px solid #f43f5e;color:#f43f5e;cursor:pointer;border-radius:8px;';
+    delBtn.onclick = deleteTempPlaylist;
+    actions.appendChild(delBtn);
+  }
 }
 
 async function deleteTempPlaylist() {
