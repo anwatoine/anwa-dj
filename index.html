@@ -373,8 +373,9 @@
       </div>
       <p style="font-size:12px;color:var(--muted);margin-bottom:1rem">Pour chaque titre, clique sur Tunebat pour trouver le BPM et le Camelot, puis sauvegarde.</p>
       <div id="admin-bpm-list"></div>
-      <div style="margin-top:1rem;text-align:center">
-        <button onclick="closeAdminBPM();finalizePlaylist();" class="btn-green" style="padding:12px 28px;font-size:14px;">🎯 Tous saisis → Finaliser la playlist</button>
+      <div style="margin-top:1rem;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button onclick="saveAllManualBPM()" class="btn-green" style="padding:12px 24px;font-size:14px;background:var(--bg3);border:1px solid var(--border);color:var(--text);">💾 Sauvegarder tout</button>
+        <button onclick="saveAllManualBPM(true)" class="btn-green" style="padding:12px 24px;font-size:14px;">🎯 Sauvegarder et Finaliser</button>
       </div>
     </div>
   </div>
@@ -915,25 +916,14 @@ function openAdminBPM() {
         '<div class="admin-bpm-field"><label>BPM *</label><input type="number" id="abpm-bpm-' + id + '" placeholder="120" step="0.1"></div>' +
         '<div class="admin-bpm-field"><label>Camelot</label><input type="text" id="abpm-cam-' + id + '" placeholder="10A"></div>' +
         '<a href="' + tunebatUrl + '" target="_blank" style="padding:7px 12px;background:#ff6b35;color:#fff;border-radius:8px;font-size:12px;text-decoration:none;align-self:flex-end;">🔍 Tunebat</a>' +
-        '<button class="abpm-save-btn" data-id="' + id + '" style="padding:7px 12px;background:#1DB954;color:#000;border:none;border-radius:8px;font-size:12px;cursor:pointer;align-self:flex-end;font-weight:bold;">✅ Sauver</button>' +
-        '<span class="admin-bpm-saved" id="abpm-saved-' + id + '">✓ Sauvé !</span>' +
+        '<span class="admin-bpm-saved" id="abpm-saved-' + id + '" style="color:#1DB954;font-size:12px;display:none;align-self:flex-end;">✓ Sauvé !</span>' +
       '</div>';
     list.appendChild(div);
   });
 
   modal.classList.remove('hidden');
 
-  // Event delegation pour les boutons Sauver
-  list.addEventListener('click', function(e) {
-    var btn = e.target.closest('.abpm-save-btn');
-    if (btn) {
-      var id = btn.getAttribute('data-id');
-      var card = document.getElementById('abpm-' + id);
-      var title = card.querySelector('.admin-bpm-title').textContent;
-      var artist = card.querySelector('.admin-bpm-artist').textContent;
-      saveManualBPM(id, title, artist);
-    }
-  });
+
 }
 
 function closeAdminBPM() {
@@ -945,6 +935,26 @@ function closeAdminBPM() {
   if (missing.length === 0) {
     var fb = document.getElementById('finalize-btn');
     if (fb) fb.style.display = 'inline-flex';
+  }
+}
+
+async function saveAllManualBPM(finalize) {
+  var missing = window._lastList ? window._lastList.filter(function(i){ return i.track && i.bpmFallback; }) : [];
+  var saved = 0;
+  for (var i = 0; i < missing.length; i++) {
+    var item = missing[i];
+    var id = item.track.uri.replace('spotify:track:', '');
+    var bpmEl = document.getElementById('abpm-bpm-' + id);
+    var camEl = document.getElementById('abpm-cam-' + id);
+    if (bpmEl && bpmEl.value) {
+      await saveManualBPM(id, item.track.name, item.track.artist);
+      saved++;
+    }
+  }
+  if (saved > 0) log('💾 ' + saved + ' BPM sauvegardés', 'ok');
+  if (finalize) {
+    closeAdminBPM();
+    finalizePlaylist();
   }
 }
 
@@ -972,7 +982,7 @@ async function saveManualBPM(id, title, artist) {
       var itemId = item.track.uri.replace('spotify:track:', '');
       if (itemId === id) {
         item.bpm = parseFloat(bpm);
-        item.key = key;
+        item.key = null;
         item.camelot = camelot;
         item.bpmFallback = false;
       }
