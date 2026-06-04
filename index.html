@@ -719,6 +719,92 @@ async function finalizePlaylist() {
   }
 }
 
+// ── PLAYLIST TEMPORAIRE BPM ──────────────────────────────────────────────────
+async function createTempBPMPlaylist(missingItems) {
+  if (!missingItems || missingItems.length === 0) return;
+  
+  var token = accessToken;
+  var userId = await getSpotifyUserId(token);
+  if (!userId) return;
+
+  log('🎵 Création playlist temporaire BPM Check...', 'info');
+
+  // Créer la playlist temporaire
+  var res = await fetch('https://api.spotify.com/v1/users/' + userId + '/playlists', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: '⏳ ANWA BPM Check — À SUPPRIMER',
+      description: 'Playlist temporaire pour vérifier les BPM manquants via Spotify Mixer. Supprimez après usage.',
+      public: false
+    })
+  });
+  var playlist = await res.json();
+  if (!playlist.id) { log('❌ Erreur création playlist temporaire', 'error'); return; }
+
+  // Ajouter les titres manquants
+  var uris = missingItems.map(function(i){ return i.track.uri; });
+  await fetch('https://api.spotify.com/v1/playlists/' + playlist.id + '/tracks', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ uris: uris })
+  });
+
+  // Stocker l'ID pour suppression ultérieure
+  window._tempPlaylistId = playlist.id;
+  localStorage.setItem('anwa_temp_playlist', playlist.id);
+
+  log('✅ Playlist temporaire créée : ' + missingItems.length + ' titre(s)', 'ok');
+  log('📱 Ouvre-la sur ton téléphone → active le Mixer → note les BPM', 'info');
+
+  // Afficher le lien
+  var panel = document.getElementById('missing-panel');
+  var link = document.createElement('a');
+  link.href = 'https://open.spotify.com/playlist/' + playlist.id;
+  link.target = '_blank';
+  link.className = 'btn-green';
+  link.style.cssText = 'font-size:13px;padding:8px 16px;text-decoration:none;background:#1a78c2;';
+  link.textContent = '📱 Ouvrir sur Spotify';
+  panel.querySelector('div:last-child').appendChild(link);
+
+  // Bouton supprimer la temp
+  var delBtn = document.createElement('button');
+  delBtn.textContent = '🗑️ Supprimer playlist temp';
+  delBtn.className = 'btn-green';
+  delBtn.style.cssText = 'font-size:13px;padding:8px 16px;background:rgba(244,63,94,0.2);border:1px solid #f43f5e;color:#f43f5e;';
+  delBtn.onclick = deleteTempPlaylist;
+  panel.querySelector('div:last-child').appendChild(delBtn);
+}
+
+async function deleteTempPlaylist() {
+  var playlistId = window._tempPlaylistId || localStorage.getItem('anwa_temp_playlist');
+  if (!playlistId) { alert('Aucune playlist temporaire trouvée'); return; }
+  
+  var token = accessToken;
+  var res = await fetch('https://api.spotify.com/v1/playlists/' + playlistId + '/followers', {
+    method: 'DELETE',
+    headers: { Authorization: 'Bearer ' + token }
+  });
+  
+  if (res.ok || res.status === 200) {
+    localStorage.removeItem('anwa_temp_playlist');
+    window._tempPlaylistId = null;
+    log('🗑️ Playlist temporaire supprimée', 'ok');
+    // Retirer les boutons
+    document.querySelectorAll('#missing-panel a[href*="spotify"], #missing-panel button[onclick*="deleteTempPlaylist"]').forEach(function(el){ el.remove(); });
+  }
+}
+
+async function getSpotifyUserId(token) {
+  try {
+    var res = await fetch('https://api.spotify.com/v1/me', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    var data = await res.json();
+    return data.id || null;
+  } catch(e) { return null; }
+}
+
 // ── TOKEN STATUS ─────────────────────────────────────────────────────────────
 var tokenCheckInterval = null;
 
@@ -1315,6 +1401,17 @@ async function generatePlaylist() {
     document.getElementById('result-desc').textContent=uris.length+' titres · SBK jusqu\'à '+minutesToTime(startMin+sbkDur)+' · Konpa ensuite · ~'+duree+'h';
     document.getElementById('result-link').href=pl.external_urls?pl.external_urls.spotify:'#';
     btn.disabled=false;
+
+    // Titres sans BPM → playlist temporaire
+    var missingItems = list.filter(function(i){ return i.track && i.bpmFallback; });
+    if (missingItems.length > 0) {
+      document.getElementById('missing-panel').style.display = 'block';
+      document.getElementById('missing-count').textContent = missingItems.length;
+      document.getElementById('finalize-btn').style.display = 'inline-flex';
+      window._lastPlaylistId = pl.id;
+      window._lastList = list;
+      await createTempBPMPlaylist(missingItems);
+    }
   } catch(e) { log('❌ Erreur : '+e.message,'err'); btn.disabled=false; }
 }
 
