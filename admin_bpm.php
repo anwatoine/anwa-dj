@@ -1,8 +1,10 @@
 <?php
 header('Content-Type: text/html; charset=utf-8');
 
-$manual_file = __DIR__ . '/bpm_manual.json';
-$missing_file = __DIR__ . '/bpm_missing.json';
+$data_dir = __DIR__ . '/data';
+if (!is_dir($data_dir)) mkdir($data_dir, 0755, true);
+$manual_file = $data_dir . '/bpm_manual.json';
+$missing_file = $data_dir . '/bpm_missing.json';
 
 // Actions POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
