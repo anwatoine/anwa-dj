@@ -755,9 +755,11 @@ async function finalizePlaylist() {
 
   btn.textContent = '⏳ Réoptimisation...';
 
-  // Retrier
+  // Retrier avec les BPM mis à jour (manuels + Songstats)
   var sorted = sortByBPM(window._lastList, bpmData, sbkRot, koRot);
+  window._lastList = sorted; // Mettre à jour la liste principale
   var newUris = sorted.filter(function(i){return i.track;}).map(function(i){return i.track.uri;});
+  log('✓ Playlist réordonnée avec les BPM mis à jour', 'ok');
 
   // Créer la playlist principale maintenant que tous les BPM sont disponibles
   btn.textContent = '⏳ Création playlist Spotify...';
