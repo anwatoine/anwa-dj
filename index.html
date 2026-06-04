@@ -688,31 +688,36 @@ async function finalizePlaylist() {
   var sorted = sortByBPM(window._lastList, bpmData, sbkRot, koRot);
   var newUris = sorted.filter(function(i){return i.track;}).map(function(i){return i.track.uri;});
 
-  // Mettre à jour l'ordre dans Spotify
-  btn.textContent = '⏳ Mise à jour Spotify...';
+  // Créer la playlist principale maintenant que tous les BPM sont disponibles
+  btn.textContent = '⏳ Création playlist Spotify...';
   try {
-    // Reorder via PUT
-    var token = accessToken;
-    // Spotify ne supporte pas le réordonnancement en masse directement
-    // On vide et réinsère
-    var res = await fetch('https://api.spotify.com/v1/playlists/' + window._lastPlaylistId + '/tracks', {
-      method: 'PUT',
-      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ uris: newUris.slice(0, 100) })
+    var name = window._lastName || document.getElementById('playlist-name').value || 'ANWA SBK';
+    var cr = await fetch('https://api.spotify.com/v1/me/playlists', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name, description: 'Playlist ANWA DJ — ' + new Date().toLocaleDateString('fr-FR'), public: true })
     });
-    if (res.ok) {
-      // Ajouter le reste si > 100 titres
-      for (var i = 100; i < newUris.length; i += 100) {
-        await fetch('https://api.spotify.com/v1/playlists/' + window._lastPlaylistId + '/tracks', {
-          method: 'POST',
-          headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ uris: newUris.slice(i, i+100) })
-        });
-      }
-      btn.textContent = '✅ Playlist optimisée !';
-      btn.style.background = 'var(--green)';
-      document.getElementById('missing-panel').style.display = 'none';
+    var pl = await cr.json();
+    if (!pl.id) { btn.textContent = '❌ Erreur création'; return; }
+
+    // Ajouter les titres par batch de 100
+    for (var i = 0; i < newUris.length; i += 100) {
+      await fetch('https://api.spotify.com/v1/playlists/' + pl.id + '/items', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uris: newUris.slice(i, i+100) })
+      });
     }
+
+    btn.textContent = '✅ Playlist créée !';
+    btn.style.background = 'var(--green)';
+    document.getElementById('missing-panel').style.display = 'none';
+    document.getElementById('result-section').style.display = 'block';
+    document.getElementById('result-link').href = pl.external_urls ? pl.external_urls.spotify : '#';
+    log('🎉 Playlist "' + name + '" créée avec ' + newUris.length + ' titres !', 'ok');
+
+    // Supprimer la playlist temporaire automatiquement
+    await deleteTempPlaylist();
   } catch(e) {
     btn.textContent = '❌ Erreur';
     console.error(e);
@@ -803,6 +808,25 @@ async function getSpotifyUserId(token) {
     return data.id || null;
   } catch(e) { return null; }
 }
+
+// ── COMMUNICATION ADMIN BPM ──────────────────────────────────────────────────
+// Écouter les mises à jour de l'admin BPM via localStorage
+window.addEventListener('storage', function(e) {
+  if (e.key === 'anwa_bpm_updated') {
+    var data = JSON.parse(e.newValue || '{}');
+    log('✅ BPM mis à jour : ' + (data.title || '') + ' → ' + data.bpm + ' BPM · ' + (data.camelot || ''), 'ok');
+    
+    // Mettre à jour le compteur
+    var missing = window._lastList ? window._lastList.filter(function(i){ return i.track && i.bpmFallback; }) : [];
+    var mc = document.getElementById('missing-count');
+    if (mc) mc.textContent = missing.length;
+    
+    // Si plus de titres manquants → activer le bouton Finaliser
+    if (missing.length === 0) {
+      log('🎉 Tous les BPM sont renseignés ! Cliquez Finaliser pour créer la playlist.', 'ok');
+    }
+  }
+});
 
 // ── TOKEN STATUS ─────────────────────────────────────────────────────────────
 var tokenCheckInterval = null;
@@ -1378,13 +1402,7 @@ async function generatePlaylist() {
     list = sortByBPM(list, bpmData, sbkRot, koRot);
     log('✓ Playlist triée par BPM progressif (Kizomba → Bachata → Salsa → Konpa)','ok');
 
-    log('🔨 Création de la playlist…','info');
-
-    var cr=await fetch('https://api.spotify.com/v1/me/playlists',{method:'POST',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},body:JSON.stringify({name:name,description:'Playlist ANWA DJ — '+new Date().toLocaleDateString('fr-FR'),public:true})});
-    var pl=await cr.json();
-    if(!pl.id){log('❌ Erreur création : '+JSON.stringify(pl),'err');btn.disabled=false;return;}
-    log('✓ Playlist "'+name+'" créée','ok'); setProgress(50);
-
+    // Afficher le preview des titres
     var uris=[];
     list.forEach(function(item,idx){
       if(item.track){
@@ -1392,13 +1410,40 @@ async function generatePlaylist() {
         var tm=((startMin+idx*4)%1440+1440)%1440;
         var h=Math.floor(tm/60)%24,mn=tm%60;
         var timeStr=(h<10?'0':'')+h+'h'+(mn<10?'0':'')+mn;
-        var bpmStr=item.bpm?(Math.round(item.bpm)+' BPM'+(item.bpmFallback?' ~':'')):'—';
+        var bpmStr=item.bpm?Math.round(item.bpm)+' BPM':'⚠️';
         var camelotStr=item.camelot||'';
         addTrackPreview(item.g,item.track.name,item.track.artist,item.track.year,eraYear,timeStr,bpmStr,camelotStr);
       }
     });
-    setProgress(80);
 
+    // Vérifier les titres sans BPM AVANT de créer la playlist principale
+    var missingItems = list.filter(function(i){ return i.track && i.bpmFallback; });
+    if (missingItems.length > 0) {
+      log('⚠️ '+missingItems.length+' titre(s) sans BPM — création playlist temporaire...','warn');
+      var mp = document.getElementById('missing-panel');
+      var mc = document.getElementById('missing-count');
+      var fb = document.getElementById('finalize-btn');
+      if (mp) mp.style.display = 'block';
+      if (mc) mc.textContent = missingItems.length;
+      if (fb) fb.style.display = 'inline-flex';
+      window._lastList = list;
+      window._lastName = name;
+      window._lastSbkRot = sbkRot;
+      window._lastKoRot = koRot;
+      await createTempBPMPlaylist(missingItems);
+      log('📋 Renseigne les BPM manquants dans Admin BPM puis clique Finaliser','info');
+      btn.disabled=false;
+      return; // Stop — on attend la finalisation
+    }
+
+    // Tous les BPM sont disponibles → créer la playlist directement
+    log('🔨 Création de la playlist…','info');
+    var cr=await fetch('https://api.spotify.com/v1/me/playlists',{method:'POST',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},body:JSON.stringify({name:name,description:'Playlist ANWA DJ — '+new Date().toLocaleDateString('fr-FR'),public:true})});
+    var pl=await cr.json();
+    if(!pl.id){log('❌ Erreur création : '+JSON.stringify(pl),'err');btn.disabled=false;return;}
+    log('✓ Playlist "'+name+'" créée','ok'); setProgress(50);
+
+    setProgress(80);
     for(var i=0;i<uris.length;i+=100){
       var r=await fetch('https://api.spotify.com/v1/playlists/'+pl.id+'/items',{method:'POST',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},body:JSON.stringify({uris:uris.slice(i,i+100)})});
       var d=await r.json();
@@ -1411,20 +1456,6 @@ async function generatePlaylist() {
     document.getElementById('result-desc').textContent=uris.length+' titres · SBK jusqu\'à '+minutesToTime(startMin+sbkDur)+' · Konpa ensuite · ~'+duree+'h';
     document.getElementById('result-link').href=pl.external_urls?pl.external_urls.spotify:'#';
     btn.disabled=false;
-
-    // Titres sans BPM → playlist temporaire
-    var missingItems = list.filter(function(i){ return i.track && i.bpmFallback; });
-    if (missingItems.length > 0) {
-      var mp = document.getElementById('missing-panel');
-      var mc = document.getElementById('missing-count');
-      var fb = document.getElementById('finalize-btn');
-      if (mp) mp.style.display = 'block';
-      if (mc) mc.textContent = missingItems.length;
-      if (fb) fb.style.display = 'inline-flex';
-      window._lastPlaylistId = pl.id;
-      window._lastList = list;
-      await createTempBPMPlaylist(missingItems);
-    }
   } catch(e) { log('❌ Erreur : '+e.message,'err'); btn.disabled=false; }
 }
 

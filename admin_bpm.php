@@ -61,6 +61,7 @@ $manual = file_exists($manual_file) ? json_decode(file_get_contents($manual_file
 <title>ANWA DJ — Admin BPM</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --bg2: #1a1a1a; }
   body { background: #0f0f0f; color: #e0e0e0; font-family: 'Space Mono', monospace; padding: 1.5rem; }
   h1 { color: #1DB954; margin-bottom: 0.5rem; font-size: 1.4rem; }
   h2 { color: #fbbf24; font-size: 1rem; margin: 1.5rem 0 0.75rem; }
@@ -90,7 +91,10 @@ $manual = file_exists($manual_file) ? json_decode(file_get_contents($manual_file
 </head>
 <body>
 
-<h1>🎵 ANWA DJ — Admin BPM</h1>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+  <h1>🎵 ANWA DJ — Admin BPM</h1>
+  <a href="index.html" style="padding:8px 16px;background:var(--bg2);border:1px solid #333;border-radius:8px;color:#888;font-size:12px;text-decoration:none;">← Retour à l'app</a>
+</div>
 <p class="subtitle">Saisie manuelle des BPM pour les titres non trouvés automatiquement</p>
 
 <div class="stats">
@@ -184,9 +188,38 @@ async function saveBPM(id, title, artist) {
   const r = await fetch('admin_bpm.php', { method: 'POST', body: form });
   const d = await r.json();
   if (d.success) {
+    // Notifier la page principale via localStorage
+    localStorage.setItem('anwa_bpm_updated', JSON.stringify({
+      spotify_id: id, title: title, artist: artist,
+      bpm: bpm, key: key, camelot: camelot,
+      timestamp: Date.now()
+    }));
+    
+    // Mettre à jour le compteur restant
     document.getElementById('card-' + id)?.remove();
-    location.reload();
+    const remaining = document.querySelectorAll('.card[id^="card-"]').length;
+    document.querySelector('.stat-num').textContent = remaining;
+    
+    // Afficher confirmation
+    const toast = document.createElement('div');
+    toast.style.cssText = 'position:fixed;top:20px;right:20px;background:#1DB954;color:#000;padding:12px 20px;border-radius:10px;font-weight:bold;z-index:999;';
+    toast.textContent = '✅ ' + title + ' — ' + bpm + ' BPM sauvegardé !';
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+    
+    // Si plus aucun titre manquant → bouton retour
+    if (remaining === 0) {
+      showReturnButton();
+    }
   }
+}
+
+function showReturnButton() {
+  const btn = document.createElement('a');
+  btn.href = 'index.html';
+  btn.style.cssText = 'display:block;text-align:center;margin:2rem auto;padding:14px 28px;background:#1DB954;color:#000;border-radius:12px;font-weight:bold;font-size:15px;text-decoration:none;max-width:300px;';
+  btn.textContent = '🎵 Retour → Finaliser la playlist';
+  document.body.appendChild(btn);
 }
 
 async function deleteBPM(id) {
