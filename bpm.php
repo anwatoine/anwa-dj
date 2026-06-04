@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: https://dj.anwadance.com');
+header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
@@ -11,6 +11,13 @@ $spotify_ids = $body['ids'] ?? [];
 $track_info = $body['track_info'] ?? []; // titre + artiste pour le log
 
 if (empty($spotify_ids)) { echo json_encode(['error' => 'No IDs provided']); exit; }
+
+// Augmenter le timeout PHP
+set_time_limit(120);
+ini_set('max_execution_time', 120);
+
+// Limiter à 20 IDs par appel pour éviter les timeouts
+$spotify_ids = array_slice($spotify_ids, 0, 20);
 
 $manual_file  = __DIR__ . '/bpm_manual.json';
 $cache_file   = __DIR__ . '/bpm_cache.json';

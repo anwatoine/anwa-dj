@@ -1143,18 +1143,27 @@ async function fetchBPMs(uris, list) {
       trackInfo[id] = { title: item.track.name, artist: item.track.artist };
     });
   }
-  try {
-    var res = await fetch('https://dj.anwadance.com/bpm.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ids: ids, track_info: trackInfo })
-    });
-    var data = await res.json();
-    return data.results || {};
-  } catch(e) {
-    console.log('BPM fetch error:', e);
-    return {};
+  
+  // Traiter par batch de 20 pour éviter les timeouts
+  var allResults = {};
+  var batchSize = 20;
+  for (var i = 0; i < ids.length; i += batchSize) {
+    var batchIds = ids.slice(i, i + batchSize);
+    var batchInfo = {};
+    batchIds.forEach(function(id) { if (trackInfo[id]) batchInfo[id] = trackInfo[id]; });
+    try {
+      var res = await fetch('https://dj.anwadance.com/bpm.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: batchIds, track_info: batchInfo })
+      });
+      var data = await res.json();
+      Object.assign(allResults, data.results || {});
+    } catch(e) {
+      console.log('BPM fetch error batch ' + i + ':', e);
+    }
   }
+  return allResults;
 }
 
 // Compatibilité Camelot : retourne un score (0=incompatible, 1=ok, 2=parfait)
