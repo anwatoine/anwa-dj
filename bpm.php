@@ -45,46 +45,84 @@ $camelotMap = [
     'A# major' => '6B', 'A# minor' => '3A',
 ];
 
-function getSongstats($spotify_id, $camelotMap) {
-    $ch = curl_init('https://songstats.com/t/' . $spotify_id);
-    curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER => true, CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_TIMEOUT => 8, CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-    ]);
-    curl_exec($ch);
-    $finalUrl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
-    curl_close($ch);
-
-    if (!preg_match('/songstats\.com\/track\/([a-z0-9]+)\//i', $finalUrl, $m)) return null;
-    $songstats_id = $m[1];
-
-    $ch2 = curl_init('https://data.songstats.com/api/v1/analytics_track/' . $songstats_id . '/top?source=overview');
-    curl_setopt_array($ch2, [
-        CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 8, CURLOPT_USERAGENT => 'Mozilla/5.0',
-        CURLOPT_HTTPHEADER => ['Accept: application/json', 'Origin: https://songstats.com', 'Referer: https://songstats.com/'],
-        CURLOPT_ENCODING => '',
-    ]);
-    $data = json_decode(curl_exec($ch2), true);
-    curl_close($ch2);
-
-    $bpm = null; $key = null; $camelot = null; $isrc = null;
-    if (isset($data['overviewInfo']['audioFeatureData']['summaryItems'])) {
-        foreach ($data['overviewInfo']['audioFeatureData']['summaryItems'] as $item) {
-            if ($item['key'] === 'tempo') $bpm = $item['value'];
-            if ($item['key'] === 'key') $key = $item['value'];
-        }
-        if ($key && isset($camelotMap[$key])) $camelot = $camelotMap[$key];
+function getSongstatsMulti($spotify_ids, $camelotMap) {
+    // Étape 1 : Résoudre tous les IDs en parallèle
+    $mh = curl_multi_init();
+    $handles = [];
+    foreach ($spotify_ids as $id) {
+        $ch = curl_init('https://songstats.com/t/' . $id);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true, CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_TIMEOUT => 10, CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        ]);
+        curl_multi_add_handle($mh, $ch);
+        $handles[$id] = $ch;
     }
-    // Récupérer ISRC
-    if (isset($data['overviewInfo']['infoArray'])) {
-        foreach ($data['overviewInfo']['infoArray'] as $info) {
-            if ($info['name'] === 'ISRCs:' && !empty($info['data'][0]['text'])) {
-                $isrc = $info['data'][0]['text'];
+    // Exécuter en parallèle
+    do { $status = curl_multi_exec($mh, $active); curl_multi_select($mh); } while ($active);
+
+    // Récupérer les Songstats IDs
+    $songstats_ids = [];
+    foreach ($handles as $spotify_id => $ch) {
+        $finalUrl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
+        curl_multi_remove_handle($mh, $ch);
+        curl_close($ch);
+        if (preg_match('/songstats\.com\/track\/([a-z0-9]+)\//i', $finalUrl, $m)) {
+            $songstats_ids[$spotify_id] = $m[1];
+        }
+    }
+    curl_multi_close($mh);
+
+    if (empty($songstats_ids)) return [];
+
+    // Étape 2 : Récupérer les BPM en parallèle
+    $mh2 = curl_multi_init();
+    $handles2 = [];
+    foreach ($songstats_ids as $spotify_id => $songstats_id) {
+        $ch = curl_init('https://data.songstats.com/api/v1/analytics_track/' . $songstats_id . '/top?source=overview');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 10, CURLOPT_USERAGENT => 'Mozilla/5.0',
+            CURLOPT_HTTPHEADER => ['Accept: application/json', 'Origin: https://songstats.com', 'Referer: https://songstats.com/'],
+            CURLOPT_ENCODING => '',
+        ]);
+        curl_multi_add_handle($mh2, $ch);
+        $handles2[$spotify_id] = $ch;
+    }
+    do { $status = curl_multi_exec($mh2, $active); curl_multi_select($mh2); } while ($active);
+
+    // Parser les résultats
+    $results = [];
+    foreach ($handles2 as $spotify_id => $ch) {
+        $response = curl_multi_getcontent($ch);
+        curl_multi_remove_handle($mh2, $ch);
+        curl_close($ch);
+        $data = json_decode($response, true);
+        $bpm = null; $key = null; $camelot = null; $isrc = null;
+        if (isset($data['overviewInfo']['audioFeatureData']['summaryItems'])) {
+            foreach ($data['overviewInfo']['audioFeatureData']['summaryItems'] as $item) {
+                if ($item['key'] === 'tempo') $bpm = $item['value'];
+                if ($item['key'] === 'key') $key = $item['value'];
+            }
+            if ($key && isset($camelotMap[$key])) $camelot = $camelotMap[$key];
+        }
+        if (isset($data['overviewInfo']['infoArray'])) {
+            foreach ($data['overviewInfo']['infoArray'] as $info) {
+                if ($info['name'] === 'ISRCs:' && !empty($info['data'][0]['text'])) {
+                    $isrc = $info['data'][0]['text'];
+                }
             }
         }
+        if ($bpm) {
+            $results[$spotify_id] = ['bpm' => $bpm, 'key' => $key, 'camelot' => $camelot, 'isrc' => $isrc, 'source' => 'songstats'];
+        }
     }
-    if (!$bpm) return null;
-    return ['bpm' => $bpm, 'key' => $key, 'camelot' => $camelot, 'isrc' => $isrc, 'source' => 'songstats'];
+    curl_multi_close($mh2);
+    return $results;
+}
+
+function getSongstats($spotify_id, $camelotMap) {
+    $results = getSongstatsMulti([$spotify_id], $camelotMap);
+    return $results[$spotify_id] ?? null;
 }
 
 function getMelodata($isrc, $api_key, $camelotMap) {
@@ -117,51 +155,48 @@ $results = [];
 $cache_updated = false;
 $missing_updated = false;
 
+// Séparer les IDs : ceux en cache vs ceux à récupérer
+$ids_to_fetch = [];
 foreach ($spotify_ids as $spotify_id) {
-    // PRIORITÉ 1 : BPM manuel
     if (isset($manual[$spotify_id])) {
         $results[$spotify_id] = array_merge($manual[$spotify_id], ['source' => 'manual']);
-        continue;
-    }
-
-    // PRIORITÉ 2 : Cache Songstats
-    if (isset($cache[$spotify_id]) && !empty($cache[$spotify_id]['bpm'])) {
+    } elseif (isset($cache[$spotify_id]) && !empty($cache[$spotify_id]['bpm'])) {
         $results[$spotify_id] = $cache[$spotify_id];
-        continue;
+    } else {
+        $ids_to_fetch[] = $spotify_id;
     }
+}
 
-    // PRIORITÉ 3 : Appel Songstats
-    $entry = getSongstats($spotify_id, $camelotMap);
-    if ($entry) {
-        $results[$spotify_id] = $entry;
-        $cache[$spotify_id] = $entry;
-        $cache_updated = true;
-        usleep(50000);
-        continue;
-    }
-
-    // PRIORITÉ 4 : MeloData via ISRC (si on l'a depuis Songstats)
-    $isrc = $cache[$spotify_id]['isrc'] ?? null;
-    if ($isrc) {
-        $melo = getMelodata($isrc, $melodata_key, $camelotMap);
-        if ($melo) {
-            $melo['isrc'] = $isrc;
-            $results[$spotify_id] = $melo;
-            $cache[$spotify_id] = $melo;
+// Récupérer tous les IDs manquants en parallèle via curl_multi
+if (!empty($ids_to_fetch)) {
+    $songstats_results = getSongstatsMulti($ids_to_fetch, $camelotMap);
+    foreach ($ids_to_fetch as $spotify_id) {
+        if (isset($songstats_results[$spotify_id])) {
+            $results[$spotify_id] = $songstats_results[$spotify_id];
+            $cache[$spotify_id] = $songstats_results[$spotify_id];
             $cache_updated = true;
-            continue;
+        } else {
+            // MeloData fallback
+            $isrc = $cache[$spotify_id]['isrc'] ?? null;
+            $melo = $isrc ? getMelodata($isrc, $melodata_key, $camelotMap) : null;
+            if ($melo) {
+                $melo['isrc'] = $isrc;
+                $results[$spotify_id] = $melo;
+                $cache[$spotify_id] = $melo;
+                $cache_updated = true;
+            } else {
+                // Non trouvé
+                $info = $track_info[$spotify_id] ?? [];
+                $missing[$spotify_id] = [
+                    'title'  => $info['title'] ?? 'Inconnu',
+                    'artist' => $info['artist'] ?? '',
+                    'logged' => date('Y-m-d H:i')
+                ];
+                $missing_updated = true;
+                $results[$spotify_id] = ['bpm' => null, 'key' => null, 'camelot' => null, 'source' => 'missing'];
+            }
         }
     }
-
-    // PRIORITÉ 5 : Non trouvé → logger dans missing
-    $info = $track_info[$spotify_id] ?? [];
-    $missing[$spotify_id] = [
-        'title'  => $info['title'] ?? 'Inconnu',
-        'artist' => $info['artist'] ?? '',
-        'logged' => date('Y-m-d H:i')
-    ];
-    $missing_updated = true;
-    $results[$spotify_id] = ['bpm' => null, 'key' => null, 'camelot' => null, 'source' => 'missing'];
 }
 
 if ($cache_updated)   file_put_contents($cache_file,   json_encode($cache,   JSON_PRETTY_PRINT));
