@@ -67,6 +67,17 @@
   .src-label { font-size: 13px; font-weight: 600; min-width: 80px; flex-shrink: 0; }
   .konpa-box { background: rgba(244,63,94,0.06); border: 1px solid rgba(244,63,94,0.2); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem; }
 
+  /* Admin BPM Modale */
+  .admin-bpm-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 8px; }
+  .admin-bpm-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+  .admin-bpm-artist { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+  .admin-bpm-row { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+  .admin-bpm-field { display: flex; flex-direction: column; gap: 3px; }
+  .admin-bpm-field label { font-size: 10px; color: var(--muted); }
+  .admin-bpm-field input { padding: 7px 10px; background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 13px; width: 90px; }
+  .admin-bpm-field input.wide { width: 130px; }
+  .admin-bpm-saved { color: #1DB954; font-size: 12px; display: none; }
+
   /* Token status */
   .token-status { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 10px; margin-bottom: 1rem; font-size: 13px; }
   .token-status.ok { background: rgba(29,185,84,0.1); border: 1px solid rgba(29,185,84,0.3); color: #1DB954; }
@@ -353,6 +364,21 @@
     </div>
   </section>
 
+  <!-- MODALE ADMIN BPM -->
+  <div id="admin-bpm-modal" class="modal-overlay hidden">
+    <div class="modal-box" style="max-width:640px;max-height:85vh;overflow-y:auto;">
+      <div class="modal-header">
+        <span>📋 Saisir les BPM manquants</span>
+        <button onclick="closeAdminBPM()" class="modal-close">✕</button>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:1rem">Pour chaque titre, clique sur Tunebat pour trouver le BPM et le Camelot, puis sauvegarde.</p>
+      <div id="admin-bpm-list"></div>
+      <div style="margin-top:1rem;text-align:center">
+        <button onclick="closeAdminBPM();finalizePlaylist();" class="btn-green" style="padding:12px 28px;font-size:14px;">🎯 Tous saisis → Finaliser la playlist</button>
+      </div>
+    </div>
+  </div>
+
   <!-- PANNEAU BPM MANQUANTS -->
   <div id="missing-panel" style="display:none;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3);border-radius:12px;padding:1rem;margin:1rem 0;">
     <div style="font-weight:600;color:#fbbf24;margin-bottom:0.5rem">⚠️ <span id="missing-count">0</span> titre(s) sans BPM</div>
@@ -362,7 +388,7 @@
       3. Reviens ici et clique Finaliser
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center" id="missing-actions">
-      <a href="admin_bpm.php" target="_blank" class="btn-green" style="font-size:13px;padding:8px 16px;text-decoration:none;">📋 Admin BPM</a>
+      <button onclick="openAdminBPM()" class="btn-green" style="font-size:13px;padding:8px 16px;">📋 Saisir les BPM</button>
       <button id="finalize-btn" style="display:none;font-size:13px;padding:8px 16px;cursor:pointer;" onclick="finalizePlaylist()" class="btn-green">🎯 Finaliser la playlist</button>
     </div>
   </div>
@@ -455,6 +481,26 @@ function showConfig() {
   loadSavedSources();
   setTimeout(drawEnergyCurve, 100);
   startTokenMonitor();
+
+  // Restaurer le panneau si une génération est en attente
+  var pendingList = localStorage.getItem('anwa_pending_list');
+  if (pendingList) {
+    try {
+      window._lastList = JSON.parse(pendingList);
+      window._lastName = localStorage.getItem('anwa_pending_name') || 'ANWA SBK';
+      window._lastSbkRot = parseInt(localStorage.getItem('anwa_pending_sbkRot') || '0');
+      window._lastKoRot = parseInt(localStorage.getItem('anwa_pending_koRot') || '0');
+      var missing = window._lastList.filter(function(i){ return i.track && i.bpmFallback; });
+      if (missing.length > 0) {
+        var mp = document.getElementById('missing-panel');
+        var mc = document.getElementById('missing-count');
+        var fb = document.getElementById('finalize-btn');
+        if (mp) mp.style.display = 'block';
+        if (mc) mc.textContent = missing.length;
+        if (fb) fb.style.display = 'inline-flex';
+      }
+    } catch(e) {}
+  }
 }
 
 async function loadUser() {
@@ -666,7 +712,17 @@ function loadSavedSources() {
 
 // ── FINALISATION ─────────────────────────────────────────────────────────────
 async function finalizePlaylist() {
-  if (!window._lastPlaylistId || !window._lastList) {
+  // Restaurer depuis localStorage si nécessaire
+  if (!window._lastList) {
+    var saved = localStorage.getItem('anwa_pending_list');
+    if (saved) {
+      window._lastList = JSON.parse(saved);
+      window._lastName = localStorage.getItem('anwa_pending_name') || 'ANWA SBK';
+      window._lastSbkRot = parseInt(localStorage.getItem('anwa_pending_sbkRot') || '0');
+      window._lastKoRot = parseInt(localStorage.getItem('anwa_pending_koRot') || '0');
+    }
+  }
+  if (!window._lastList) {
     alert('Génère d\'abord une playlist !');
     return;
   }
@@ -730,7 +786,11 @@ async function finalizePlaylist() {
     document.getElementById('result-section').style.display = 'block';
     document.getElementById('result-link').href = pl.external_urls ? pl.external_urls.spotify : '#';
     log('🎉 Playlist "' + name + '" créée avec ' + newUris.length + ' titres !', 'ok');
-
+    // Nettoyer localStorage
+    localStorage.removeItem('anwa_pending_list');
+    localStorage.removeItem('anwa_pending_name');
+    localStorage.removeItem('anwa_pending_sbkRot');
+    localStorage.removeItem('anwa_pending_koRot');
     // Supprimer la playlist temporaire automatiquement
     await deleteTempPlaylist();
   } catch(e) {
@@ -822,6 +882,95 @@ async function getSpotifyUserId(token) {
     var data = await res.json();
     return data.id || null;
   } catch(e) { return null; }
+}
+
+// ── MODALE ADMIN BPM ─────────────────────────────────────────────────────────
+function openAdminBPM() {
+  var modal = document.getElementById('admin-bpm-modal');
+  var list = document.getElementById('admin-bpm-list');
+  if (!modal || !list) return;
+
+  // Récupérer les titres sans BPM
+  var missing = window._lastList ? window._lastList.filter(function(i){ return i.track && i.bpmFallback; }) : [];
+  if (missing.length === 0) {
+    alert('Aucun titre manquant !');
+    return;
+  }
+
+  list.innerHTML = '';
+  missing.forEach(function(item) {
+    var id = item.track.uri.replace('spotify:track:', '');
+    var title = item.track.name;
+    var artist = item.track.artist;
+    var slug = (title + '-' + artist).replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '-');
+    var tunebatUrl = 'https://tunebat.com/Info/' + slug + '/' + id;
+
+    var div = document.createElement('div');
+    div.className = 'admin-bpm-card';
+    div.id = 'abpm-' + id;
+    div.innerHTML =
+      '<div class="admin-bpm-title">' + title + '</div>' +
+      '<div class="admin-bpm-artist">' + artist + '</div>' +
+      '<div class="admin-bpm-row">' +
+        '<div class="admin-bpm-field"><label>BPM *</label><input type="number" id="abpm-bpm-' + id + '" placeholder="120" step="0.1"></div>' +
+        '<div class="admin-bpm-field"><label>Camelot</label><input type="text" id="abpm-cam-' + id + '" placeholder="10A"></div>' +
+        '<a href="' + tunebatUrl + '" target="_blank" style="padding:7px 12px;background:#ff6b35;color:#fff;border-radius:8px;font-size:12px;text-decoration:none;align-self:flex-end;">🔍 Tunebat</a>' +
+        '<button onclick="saveManualBPM('' + id + '','' + title.replace(/'/g,"\'") + '','' + artist.replace(/'/g,"\'") + '')" style="padding:7px 12px;background:#1DB954;color:#000;border:none;border-radius:8px;font-size:12px;cursor:pointer;align-self:flex-end;font-weight:bold;">✅ Sauver</button>' +
+        '<span class="admin-bpm-saved" id="abpm-saved-' + id + '">✓ Sauvé !</span>' +
+      '</div>';
+    list.appendChild(div);
+  });
+
+  modal.classList.remove('hidden');
+}
+
+function closeAdminBPM() {
+  document.getElementById('admin-bpm-modal').classList.add('hidden');
+  // Mettre à jour le compteur de titres manquants
+  var missing = window._lastList ? window._lastList.filter(function(i){ return i.track && i.bpmFallback; }) : [];
+  var mc = document.getElementById('missing-count');
+  if (mc) mc.textContent = missing.length;
+  if (missing.length === 0) {
+    var fb = document.getElementById('finalize-btn');
+    if (fb) fb.style.display = 'inline-flex';
+  }
+}
+
+async function saveManualBPM(id, title, artist) {
+  var bpm = document.getElementById('abpm-bpm-' + id).value;
+  var camelot = document.getElementById('abpm-cam-' + id).value;
+  if (!bpm) { alert('BPM requis !'); return; }
+
+  // Sauvegarder via admin_bpm.php
+  var form = new FormData();
+  form.append('action', 'save');
+  form.append('spotify_id', id);
+  form.append('bpm', bpm);
+  form.append('key', '');
+  form.append('camelot', camelot);
+  form.append('title', title);
+  form.append('artist', artist);
+
+  var r = await fetch('admin_bpm.php', { method: 'POST', body: form });
+  var d = await r.json();
+  if (d.success) {
+    // Mettre à jour dans window._lastList
+    window._lastList.forEach(function(item) {
+      if (!item.track) return;
+      var itemId = item.track.uri.replace('spotify:track:', '');
+      if (itemId === id) {
+        item.bpm = parseFloat(bpm);
+        item.key = key;
+        item.camelot = camelot;
+        item.bpmFallback = false;
+      }
+    });
+    // Feedback visuel
+    var saved = document.getElementById('abpm-saved-' + id);
+    if (saved) saved.style.display = 'inline';
+    document.getElementById('abpm-' + id).style.borderColor = '#1DB954';
+    log('✅ BPM sauvegardé : ' + title + ' → ' + bpm + ' BPM · ' + (camelot||''), 'ok');
+  }
 }
 
 // ── COMMUNICATION ADMIN BPM ──────────────────────────────────────────────────
@@ -1445,6 +1594,11 @@ async function generatePlaylist() {
       window._lastName = name;
       window._lastSbkRot = sbkRot;
       window._lastKoRot = koRot;
+      // Sauvegarder dans localStorage pour survie après retour d'onglet
+      localStorage.setItem('anwa_pending_list', JSON.stringify(list));
+      localStorage.setItem('anwa_pending_name', name);
+      localStorage.setItem('anwa_pending_sbkRot', sbkRot);
+      localStorage.setItem('anwa_pending_koRot', koRot);
       await createTempBPMPlaylist(missingItems);
       log('📋 Renseigne les BPM manquants dans Admin BPM puis clique Finaliser','info');
       btn.disabled=false;
