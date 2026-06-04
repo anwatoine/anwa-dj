@@ -353,6 +353,20 @@
     </div>
   </section>
 
+  <!-- PANNEAU BPM MANQUANTS -->
+  <div id="missing-panel" style="display:none;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3);border-radius:12px;padding:1rem;margin:1rem 0;">
+    <div style="font-weight:600;color:#fbbf24;margin-bottom:0.5rem">⚠️ <span id="missing-count">0</span> titre(s) sans BPM</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:0.75rem">
+      1. Ouvre la playlist temporaire sur Spotify → active le Mixer → note les BPM<br>
+      2. Saisis les BPM dans Admin BPM<br>
+      3. Reviens ici et clique Finaliser
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center" id="missing-actions">
+      <a href="admin_bpm.php" target="_blank" class="btn-green" style="font-size:13px;padding:8px 16px;text-decoration:none;">📋 Admin BPM</a>
+      <button id="finalize-btn" style="display:none;font-size:13px;padding:8px 16px;cursor:pointer;" onclick="finalizePlaylist()" class="btn-green">🎯 Finaliser la playlist</button>
+    </div>
+  </div>
+
   <section id="result-section">
     <div class="result-card">
       <h3>🎉 Playlist créée !</h3>
