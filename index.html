@@ -692,9 +692,10 @@ async function finalizePlaylist() {
   btn.textContent = '⏳ Création playlist Spotify...';
   try {
     var name = window._lastName || document.getElementById('playlist-name').value || 'ANWA SBK';
+    var writeToken = await getReadToken() || accessToken;
     var cr = await fetch('https://api.spotify.com/v1/me/playlists', {
       method: 'POST',
-      headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+      headers: { Authorization: 'Bearer ' + writeToken, 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: name, description: 'Playlist ANWA DJ — ' + new Date().toLocaleDateString('fr-FR'), public: true })
     });
     var pl = await cr.json();
@@ -704,7 +705,7 @@ async function finalizePlaylist() {
     for (var i = 0; i < newUris.length; i += 100) {
       await fetch('https://api.spotify.com/v1/playlists/' + pl.id + '/items', {
         method: 'POST',
-        headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+        headers: { Authorization: 'Bearer ' + writeToken, 'Content-Type': 'application/json' },
         body: JSON.stringify({ uris: newUris.slice(i, i+100) })
       });
     }
@@ -728,7 +729,7 @@ async function finalizePlaylist() {
 async function createTempBPMPlaylist(missingItems) {
   if (!missingItems || missingItems.length === 0) return;
   
-  var token = accessToken;
+  var token = await getReadToken() || accessToken;
   log('🎵 Création playlist temporaire BPM Check...', 'info');
 
   // Créer la playlist temporaire via /me/playlists (même endpoint que la playlist principale)
@@ -784,7 +785,7 @@ async function deleteTempPlaylist() {
   var playlistId = window._tempPlaylistId || localStorage.getItem('anwa_temp_playlist');
   if (!playlistId) { alert('Aucune playlist temporaire trouvée'); return; }
   
-  var token = accessToken;
+  var token = await getReadToken() || accessToken;
   var res = await fetch('https://api.spotify.com/v1/playlists/' + playlistId + '/followers', {
     method: 'DELETE',
     headers: { Authorization: 'Bearer ' + token }
@@ -1438,14 +1439,15 @@ async function generatePlaylist() {
 
     // Tous les BPM sont disponibles → créer la playlist directement
     log('🔨 Création de la playlist…','info');
-    var cr=await fetch('https://api.spotify.com/v1/me/playlists',{method:'POST',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},body:JSON.stringify({name:name,description:'Playlist ANWA DJ — '+new Date().toLocaleDateString('fr-FR'),public:true})});
+    var writeToken = await getReadToken() || accessToken;
+    var cr=await fetch('https://api.spotify.com/v1/me/playlists',{method:'POST',headers:{Authorization:'Bearer '+writeToken,'Content-Type':'application/json'},body:JSON.stringify({name:name,description:'Playlist ANWA DJ — '+new Date().toLocaleDateString('fr-FR'),public:true})});
     var pl=await cr.json();
     if(!pl.id){log('❌ Erreur création : '+JSON.stringify(pl),'err');btn.disabled=false;return;}
     log('✓ Playlist "'+name+'" créée','ok'); setProgress(50);
 
     setProgress(80);
     for(var i=0;i<uris.length;i+=100){
-      var r=await fetch('https://api.spotify.com/v1/playlists/'+pl.id+'/items',{method:'POST',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},body:JSON.stringify({uris:uris.slice(i,i+100)})});
+      var r=await fetch('https://api.spotify.com/v1/playlists/'+pl.id+'/items',{method:'POST',headers:{Authorization:'Bearer '+writeToken,'Content-Type':'application/json'},body:JSON.stringify({uris:uris.slice(i,i+100)})});
       var d=await r.json();
       if(d.error) log('❌ '+d.error.message,'err');
     }
