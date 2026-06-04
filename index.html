@@ -650,6 +650,75 @@ function loadSavedSources() {
   });
 }
 
+// ── FINALISATION ─────────────────────────────────────────────────────────────
+async function finalizePlaylist() {
+  if (!window._lastPlaylistId || !window._lastList) {
+    alert('Génère d'abord une playlist !');
+    return;
+  }
+  
+  var btn = document.getElementById('finalize-btn');
+  btn.textContent = '⏳ Récupération BPM...';
+  btn.disabled = true;
+
+  // Re-récupérer les BPM (les manuels seront maintenant disponibles)
+  var uris = window._lastList.filter(function(i){return i.track;}).map(function(i){return i.track.uri;});
+  var bpmData = await fetchBPMs(uris, window._lastList);
+  
+  // Réassigner BPM
+  window._lastList.forEach(function(item) {
+    if (!item.track) return;
+    var id = item.track.uri.replace('spotify:track:', '');
+    var info = bpmData[id];
+    if (info && info.bpm) {
+      item.bpm = parseFloat(info.bpm);
+      item.key = info.key;
+      item.camelot = info.camelot;
+      item.bpmFallback = false;
+    }
+  });
+
+  // Récupérer les params de rotation
+  var p = getRotationParams();
+  var sbkRot = p.sbkRot, koRot = p.koRot;
+
+  btn.textContent = '⏳ Réoptimisation...';
+
+  // Retrier
+  var sorted = sortByBPM(window._lastList, bpmData, sbkRot, koRot);
+  var newUris = sorted.filter(function(i){return i.track;}).map(function(i){return i.track.uri;});
+
+  // Mettre à jour l'ordre dans Spotify
+  btn.textContent = '⏳ Mise à jour Spotify...';
+  try {
+    // Reorder via PUT
+    var token = accessToken;
+    // Spotify ne supporte pas le réordonnancement en masse directement
+    // On vide et réinsère
+    var res = await fetch('https://api.spotify.com/v1/playlists/' + window._lastPlaylistId + '/tracks', {
+      method: 'PUT',
+      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uris: newUris.slice(0, 100) })
+    });
+    if (res.ok) {
+      // Ajouter le reste si > 100 titres
+      for (var i = 100; i < newUris.length; i += 100) {
+        await fetch('https://api.spotify.com/v1/playlists/' + window._lastPlaylistId + '/tracks', {
+          method: 'POST',
+          headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ uris: newUris.slice(i, i+100) })
+        });
+      }
+      btn.textContent = '✅ Playlist optimisée !';
+      btn.style.background = 'var(--green)';
+      document.getElementById('missing-panel').style.display = 'none';
+    }
+  } catch(e) {
+    btn.textContent = '❌ Erreur';
+    console.error(e);
+  }
+}
+
 // ── TOKEN STATUS ─────────────────────────────────────────────────────────────
 var tokenCheckInterval = null;
 
@@ -977,14 +1046,22 @@ function drawEnergyCurve() {
 
 // ── BPM ──────────────────────────────────────────────────────────────────────
 // ── BPM ──────────────────────────────────────────────────────────────────────
-async function fetchBPMs(uris) {
-  // Extraire les IDs Spotify depuis les URIs
+async function fetchBPMs(uris, list) {
   var ids = uris.map(function(uri) { return uri.replace('spotify:track:', ''); });
+  // Préparer les infos titre+artiste pour le log des manquants
+  var trackInfo = {};
+  if (list) {
+    list.forEach(function(item) {
+      if (!item.track) return;
+      var id = item.track.uri.replace('spotify:track:', '');
+      trackInfo[id] = { title: item.track.name, artist: item.track.artist };
+    });
+  }
   try {
     var res = await fetch('https://dj.anwadance.com/bpm.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ids: ids })
+      body: JSON.stringify({ ids: ids, track_info: trackInfo })
     });
     var data = await res.json();
     return data.results || {};
@@ -1028,14 +1105,33 @@ function reorderByCamelot(items) {
 }
 
 function sortByBPM(list, bpmData, sbkRot, koRot) {
+  // BPM moyens par genre (fallback si Songstats ne trouve pas)
+  var bpmDefaults = {
+    'S':  { bpm: 185, key: 'A',  camelot: '11B' },
+    'B':  { bpm: 126, key: 'F',  camelot: '4A'  },
+    'K':  { bpm: 80,  key: 'C',  camelot: '5A'  },
+    'KO': { bpm: 128, key: 'F',  camelot: '6A'  }
+  };
+
   // Étape 1 : Assigner BPM, Key et Camelot à chaque titre
   list.forEach(function(item) {
     if (!item.track) return;
     var id = item.track.uri.replace('spotify:track:', '');
     var info = bpmData[id];
-    item.bpm = info && info.bpm ? parseFloat(info.bpm) : null;
-    item.key = info && info.key ? info.key : null;
-    item.camelot = info && info.camelot ? info.camelot : null;
+    if (info && info.bpm) {
+      // Données réelles Songstats
+      item.bpm = parseFloat(info.bpm);
+      item.key = info.key || null;
+      item.camelot = info.camelot || null;
+      item.bpmFallback = false;
+    } else {
+      // Fallback par genre
+      var def = bpmDefaults[item.g] || { bpm: 120, key: 'C', camelot: '8B' };
+      item.bpm = def.bpm;
+      item.key = def.key;
+      item.camelot = def.camelot;
+      item.bpmFallback = true;
+    }
   });
 
   // Étape 2 : Obtenir les niveaux d'énergie par rotation
@@ -1178,7 +1274,7 @@ async function generatePlaylist() {
     // Récupérer les BPM
     log('🎵 Récupération des BPM via Songstats…','info');
     var uris = list.filter(function(i){return i.track;}).map(function(i){return i.track.uri;});
-    var bpmData = await fetchBPMs(uris);
+    var bpmData = await fetchBPMs(uris, list);
     var bpmCount = Object.values(bpmData).filter(function(d){return d.bpm;}).length;
     log('✓ BPM récupérés : '+bpmCount+'/'+uris.length+' titres','ok');
 
@@ -1200,7 +1296,7 @@ async function generatePlaylist() {
         var tm=((startMin+idx*4)%1440+1440)%1440;
         var h=Math.floor(tm/60)%24,mn=tm%60;
         var timeStr=(h<10?'0':'')+h+'h'+(mn<10?'0':'')+mn;
-        var bpmStr=item.bpm?Math.round(item.bpm)+' BPM':'—';
+        var bpmStr=item.bpm?(Math.round(item.bpm)+' BPM'+(item.bpmFallback?' ~':'')):'—';
         var camelotStr=item.camelot||'';
         addTrackPreview(item.g,item.track.name,item.track.artist,item.track.year,eraYear,timeStr,bpmStr,camelotStr);
       }
