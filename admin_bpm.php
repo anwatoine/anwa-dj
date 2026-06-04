@@ -51,6 +51,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $missing = file_exists($missing_file) ? json_decode(file_get_contents($missing_file), true) : [];
+// DEBUG
+echo "<!-- DEBUG: missing_file=$missing_file | exists=" . (file_exists($missing_file)?'YES':'NO') . " | count=" . count($missing) . " -->";
 $manual = file_exists($manual_file) ? json_decode(file_get_contents($manual_file), true) : [];
 ?>
 <!DOCTYPE html>
