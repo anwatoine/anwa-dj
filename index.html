@@ -1364,6 +1364,17 @@ async function generatePlaylist() {
     var bpmCount = Object.values(bpmData).filter(function(d){return d.bpm;}).length;
     log('✓ BPM récupérés : '+bpmCount+'/'+uris.length+' titres','ok');
 
+    // Dédupliquer les titres
+    var seenUris = {};
+    list = list.filter(function(item) {
+      if (!item.track) return false;
+      var uri = item.track.uri;
+      if (seenUris[uri]) return false;
+      seenUris[uri] = true;
+      return true;
+    });
+    log('✓ Doublons supprimés : ' + list.length + ' titres uniques', 'ok');
+
     // Trier par BPM
     list = sortByBPM(list, bpmData, sbkRot, koRot);
     log('✓ Playlist triée par BPM progressif (Kizomba → Bachata → Salsa → Konpa)','ok');
@@ -1405,9 +1416,12 @@ async function generatePlaylist() {
     // Titres sans BPM → playlist temporaire
     var missingItems = list.filter(function(i){ return i.track && i.bpmFallback; });
     if (missingItems.length > 0) {
-      document.getElementById('missing-panel').style.display = 'block';
-      document.getElementById('missing-count').textContent = missingItems.length;
-      document.getElementById('finalize-btn').style.display = 'inline-flex';
+      var mp = document.getElementById('missing-panel');
+      var mc = document.getElementById('missing-count');
+      var fb = document.getElementById('finalize-btn');
+      if (mp) mp.style.display = 'block';
+      if (mc) mc.textContent = missingItems.length;
+      if (fb) fb.style.display = 'inline-flex';
       window._lastPlaylistId = pl.id;
       window._lastList = list;
       await createTempBPMPlaylist(missingItems);
