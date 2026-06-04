@@ -724,13 +724,10 @@ async function createTempBPMPlaylist(missingItems) {
   if (!missingItems || missingItems.length === 0) return;
   
   var token = accessToken;
-  var userId = await getSpotifyUserId(token);
-  if (!userId) return;
-
   log('🎵 Création playlist temporaire BPM Check...', 'info');
 
-  // Créer la playlist temporaire
-  var res = await fetch('https://api.spotify.com/v1/users/' + userId + '/playlists', {
+  // Créer la playlist temporaire via /me/playlists (même endpoint que la playlist principale)
+  var res = await fetch('https://api.spotify.com/v1/me/playlists', {
     method: 'POST',
     headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
     body: JSON.stringify({
