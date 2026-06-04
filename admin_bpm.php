@@ -2,7 +2,7 @@
 header('Content-Type: text/html; charset=utf-8');
 
 $manual_file = __DIR__ . '/bpm_manual.json';
-$missing_file = __DIR__ . '/missing_bpm.json';
+$missing_file = __DIR__ . '/bpm_missing.json';
 
 // Actions POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
