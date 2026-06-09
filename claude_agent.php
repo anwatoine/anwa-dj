@@ -185,7 +185,9 @@ function callClaude($api_key, $model, $system, $message) {
     $response = curl_exec($ch);
     $code     = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
-    if ($code !== 200) return null;
+    if ($code !== 200) {
+        return ['_debug' => true, 'http_code' => $code, 'response' => $response, 'key_present' => !empty($api_key)];
+    }
     return json_decode($response, true);
 }
 
