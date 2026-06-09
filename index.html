@@ -1,0 +1,1702 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ANWA DJ — Spotify Playlist Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #1DB954; --green-dim: rgba(29,185,84,0.12);
+    --bg: #0a0a0a; --bg2: #111111; --bg3: #1a1a1a;
+    --border: rgba(255,255,255,0.07); --border-hover: rgba(29,185,84,0.4);
+    --text: #f0f0f0; --muted: #888;
+    --s-color: #3b82f6; --s-bg: rgba(59,130,246,0.12);
+    --b-color: #f59e0b; --b-bg: rgba(245,158,11,0.12);
+    --k-color: #a78bfa; --k-bg: rgba(167,139,250,0.12);
+    --ko-color: #f43f5e; --ko-bg: rgba(244,63,94,0.12);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image: linear-gradient(rgba(29,185,84,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(29,185,84,0.03) 1px, transparent 1px);
+    background-size: 40px 40px; pointer-events: none; z-index: 0;
+  }
+  .app { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+  header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 3rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 1rem; }
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-icon { width: 42px; height: 42px; background: var(--green); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .logo-icon svg { width: 22px; height: 22px; fill: #000; }
+  .logo-text { font-family: 'Space Mono', monospace; font-size: 18px; font-weight: 700; }
+  .logo-text span { color: var(--green); }
+  .logo-sub { font-size: 11px; color: var(--muted); margin-top: 2px; letter-spacing: .08em; text-transform: uppercase; }
+  section { margin-bottom: 2rem; }
+  .section-title { font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 1rem; }
+  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; }
+  .btn-green {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; padding: 14px; background: var(--green); color: #000;
+    font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600;
+    border: none; border-radius: 50px; cursor: pointer; transition: all .2s;
+  }
+  .btn-green:hover { background: #22d464; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(29,185,84,0.3); }
+  .btn-green:disabled { opacity: .4; cursor: not-allowed; transform: none; box-shadow: none; }
+  .btn-green svg { width: 20px; height: 20px; fill: #000; flex-shrink: 0; }
+  .config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; }
+  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  input[type="text"], input[type="number"], input[type="time"], select {
+    width: 100%; padding: 10px 14px; background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none; transition: border-color .2s;
+  }
+  input:focus, select:focus { border-color: var(--border-hover); }
+  select option { background: var(--bg3); }
+  .genre-table { width: 100%; border-collapse: collapse; margin-bottom: 1.25rem; }
+  .genre-table th { font-size: 11px; color: var(--muted); font-weight: 500; text-align: center; padding: 0 6px 10px; font-family: 'Space Mono', monospace; letter-spacing: .05em; text-transform: uppercase; }
+  .genre-table th:first-child { text-align: left; }
+  .genre-table td { padding: 6px; vertical-align: middle; text-align: center; }
+  .genre-table td:first-child { text-align: left; }
+  .genre-table td input[type="number"] { width: 58px; text-align: center; padding: 8px 4px; }
+  .genre-label { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
+  .genre-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .genre-dot.s { background: var(--s-color); }
+  .genre-dot.b { background: var(--b-color); }
+  .genre-dot.k { background: var(--k-color); }
+  .genre-dot.ko { background: var(--ko-color); }
+  .src-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .src-label { font-size: 13px; font-weight: 600; min-width: 80px; flex-shrink: 0; }
+  .konpa-box { background: rgba(244,63,94,0.06); border: 1px solid rgba(244,63,94,0.2); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem; }
+
+  /* Admin BPM Modale */
+  .admin-bpm-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 8px; }
+  .admin-bpm-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+  .admin-bpm-artist { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+  .admin-bpm-row { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+  .admin-bpm-field { display: flex; flex-direction: column; gap: 3px; }
+  .admin-bpm-field label { font-size: 10px; color: var(--muted); }
+  .admin-bpm-field input { padding: 7px 10px; background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 13px; width: 90px; }
+  .admin-bpm-field input.wide { width: 130px; }
+  .admin-bpm-saved { color: #1DB954; font-size: 12px; display: none; }
+
+  /* Token status */
+  .token-status { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 10px; margin-bottom: 1rem; font-size: 13px; }
+  .token-status.ok { background: rgba(29,185,84,0.1); border: 1px solid rgba(29,185,84,0.3); color: #1DB954; }
+  .token-status.warn { background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.3); color: #fbbf24; }
+  .token-status.error { background: rgba(244,63,94,0.1); border: 1px solid rgba(244,63,94,0.3); color: #f43f5e; }
+  .token-status .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .token-status.ok .dot { background: #1DB954; box-shadow: 0 0 6px #1DB954; }
+  .token-status.warn .dot { background: #fbbf24; box-shadow: 0 0 6px #fbbf24; animation: pulse 1.5s infinite; }
+  .token-status.error .dot { background: #f43f5e; box-shadow: 0 0 6px #f43f5e; animation: pulse 1s infinite; }
+  .token-renew-btn { margin-left: auto; padding: 5px 12px; border-radius: 20px; border: 1px solid currentColor; background: transparent; color: inherit; font-size: 11px; cursor: pointer; text-decoration: none; }
+  .token-renew-btn:hover { opacity: 0.8; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* Énergie */
+  .energy-box { background: rgba(251,191,36,0.06); border: 1px solid rgba(251,191,36,0.2); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem; }
+  .energy-box .section-title { color: #fbbf24; }
+  .energy-modes { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1rem; }
+  .energy-mode-btn { padding: 8px 14px; border-radius: 50px; border: 1px solid var(--border); background: var(--bg3); color: var(--muted); font-size: 13px; cursor: pointer; transition: all .2s; }
+  .energy-mode-btn.active { border-color: #fbbf24; color: #fbbf24; background: rgba(251,191,36,0.1); }
+  .energy-curve { background: var(--bg3); border-radius: 10px; margin-bottom: 0.5rem; height: 130px; position: relative; overflow: hidden; }
+  .energy-curve canvas { width: 100% !important; height: 100% !important; display: block; }
+  /* Égaliseur manuel */
+  .manual-eq { background: var(--bg3); border-radius: 10px; padding: 12px 12px 0; margin-bottom: 0.5rem; }
+  .eq-bars { display: flex; align-items: flex-end; gap: 3px; height: 100px; margin-bottom: 6px; }
+  .eq-bar-wrap { display: flex; flex-direction: column; align-items: center; flex: 1; height: 100%; position: relative; }
+  .eq-bar-track { flex: 1; width: 100%; display: flex; flex-direction: column; justify-content: flex-end; cursor: pointer; position: relative; border-radius: 4px; overflow: hidden; background: rgba(255,255,255,0.05); }
+  .eq-bar-fill { width: 100%; border-radius: 4px 4px 0 0; transition: height .15s ease; }
+  .eq-bar-label { font-size: 9px; color: var(--muted); margin-top: 4px; text-align: center; white-space: nowrap; }
+  .eq-time-row { display: flex; justify-content: space-between; padding: 0 0 8px; }
+  .eq-time-label { font-size: 10px; color: var(--muted); font-family: 'Space Mono', monospace; }
+  .eq-y-labels { position: absolute; left: -28px; top: 0; height: 100px; display: flex; flex-direction: column; justify-content: space-between; }
+  .eq-y-label { font-size: 10px; color: var(--muted); }
+  .konpa-box .section-title { color: var(--ko-color); }
+  .time-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+  .timeline-preview { background: var(--bg3); border-radius: 10px; padding: 12px 14px; font-size: 12px; color: var(--muted); font-family: 'Space Mono', monospace; }
+  .timeline-preview span.sbk { color: var(--green); }
+  .timeline-preview span.ko { color: var(--ko-color); }
+  #progress-section { display: none; }
+  .progress-wrap { background: var(--bg3); border-radius: 50px; height: 6px; overflow: hidden; margin: 1rem 0; }
+  .progress-bar { height: 100%; background: var(--green); border-radius: 50px; width: 0%; transition: width .3s ease; }
+  #progress-log { font-size: 12px; font-family: 'Space Mono', monospace; max-height: 200px; overflow-y: auto; }
+  .log-line { padding: 3px 0; border-bottom: 1px solid var(--border); }
+  .log-line.ok { color: var(--green); }
+  .log-line.err { color: #f87171; }
+  .log-line.info { color: var(--muted); }
+  .log-line.ko { color: var(--ko-color); }
+  #result-section { display: none; }
+  .result-card { background: var(--green-dim); border: 1px solid rgba(29,185,84,0.3); border-radius: 16px; padding: 1.5rem; text-align: center; }
+  .result-card h3 { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
+  .result-card p { color: var(--muted); font-size: 14px; margin-bottom: 1.25rem; }
+  .btn-open { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: var(--green); color: #000; font-weight: 600; font-size: 14px; border-radius: 50px; text-decoration: none; }
+  #tracks-preview { margin-top: 1rem; }
+  .track-item { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+  .track-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 50px; flex-shrink: 0; }
+  .track-badge.S { background: var(--s-bg); color: var(--s-color); }
+  .track-badge.B { background: var(--b-bg); color: var(--b-color); }
+  .track-badge.K { background: var(--k-bg); color: var(--k-color); }
+  .track-badge.KO { background: var(--ko-bg); color: var(--ko-color); }
+  .track-name { font-size: 13px; font-weight: 500; flex: 1; }
+  .track-artist { font-size: 12px; color: var(--muted); }
+  .track-year { font-size: 11px; padding: 2px 7px; border-radius: 50px; flex-shrink: 0; }
+  .track-year.classic { background: rgba(255,255,255,0.07); color: var(--muted); }
+  .track-year.recent { background: var(--green-dim); color: var(--green); }
+  .track-bpm { font-size: 11px; color: #1DB954; padding: 2px 7px; background: rgba(29,185,84,0.1); border-radius: 50px; flex-shrink: 0; }
+  .track-time { font-size: 11px; color: var(--muted); min-width: 45px; text-align: right; flex-shrink: 0; }
+  #status-bar { display: flex; align-items: center; gap: 8px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
+  .dot.connected { background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{ opacity:1 } 50%{ opacity:.5 } }
+  #user-info { display: none; align-items: center; gap: 10px; }
+  #user-avatar { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--green); }
+  .hidden { display: none !important; }
+  .loading-box { text-align: center; padding: 3rem; color: var(--muted); font-size: 14px; }
+  .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--green); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 1rem; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  /* Recherche playlist */
+  .src-block { margin-bottom: 10px; }
+  .src-search-btn {
+    padding: 8px 12px; background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text); cursor: pointer; font-size: 14px;
+    flex-shrink: 0; transition: all .2s;
+  }
+  .src-search-btn:hover { border-color: var(--border-hover); background: var(--bg2); }
+  .src-selected { font-size: 12px; color: var(--green); padding: 4px 0 0 85px; min-height: 18px; }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+  .modal-box { background: var(--bg2); border: 1px solid var(--border-hover); border-radius: 16px; padding: 1.5rem; width: 100%; max-width: 560px; max-height: 80vh; display: flex; flex-direction: column; }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; font-weight: 600; font-size: 15px; }
+  .modal-close { background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer; padding: 4px 8px; }
+  .modal-close:hover { color: var(--text); }
+  .btn-search-go { padding: 10px 16px; background: var(--green); color: #000; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 14px; flex-shrink: 0; }
+  .btn-search-go:hover { background: #22d464; }
+  #search-results { overflow-y: auto; flex: 1; }
+  .playlist-result { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 10px; cursor: pointer; transition: background .15s; border: 1px solid transparent; margin-bottom: 6px; }
+  .playlist-result:hover { background: var(--bg3); border-color: var(--border); }
+  .playlist-result.selected { background: var(--green-dim); border-color: rgba(29,185,84,0.4); }
+  .playlist-img { width: 48px; height: 48px; border-radius: 6px; object-fit: cover; flex-shrink: 0; background: var(--bg3); }
+  .playlist-info { flex: 1; min-width: 0; }
+  .playlist-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .playlist-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .playlist-select-btn { font-size: 12px; padding: 6px 12px; background: var(--green); color: #000; border: none; border-radius: 20px; cursor: pointer; font-weight: 600; flex-shrink: 0; }
+  .search-loading { text-align: center; color: var(--muted); padding: 2rem; font-size: 13px; }
+  .search-empty { text-align: center; color: var(--muted); padding: 2rem; font-size: 13px; }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 2px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+      </div>
+      <div>
+        <div class="logo-text">ANWA <span>DJ</span></div>
+        <div class="logo-sub">Playlist Generator — BS Event</div>
+      </div>
+    </div>
+    <div id="status-bar">
+      <div class="dot" id="status-dot"></div>
+      <span id="status-text" style="color:var(--muted);font-size:13px">Non connecté</span>
+      <div id="user-info">
+        <img id="user-avatar" src="" alt="">
+        <span id="user-name" style="font-size:13px;font-weight:500"></span>
+      </div>
+    </div>
+  </header>
+
+  <section id="loading-section">
+    <div class="card"><div class="loading-box"><div class="spinner"></div>Connexion en cours…</div></div>
+  </section>
+
+  <section id="connect-section" class="hidden">
+    <div class="section-title">Connexion Spotify</div>
+    <div class="card">
+      <p style="font-size:14px;color:var(--muted);margin-bottom:1.25rem;line-height:1.6">Connecte ton compte Spotify pour générer tes playlists directement.</p>
+      <button class="btn-green" id="connect-btn">
+        <svg viewBox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+        Se connecter avec Spotify
+      </button>
+    </div>
+  </section>
+
+  <section id="config-section" class="hidden">
+    <div class="section-title">Configuration de la playlist</div>
+    <div class="card">
+      <div class="config-grid">
+        <div><label>Nom de la playlist</label><input type="text" id="playlist-name" value="ANWA SBK — Soirée BS Event"/></div>
+        <div><label>Durée totale de la soirée</label>
+          <select id="duree">
+            <option value="2">2 heures</option><option value="3">3 heures</option>
+            <option value="4" selected>4 heures</option><option value="5">5 heures</option><option value="6">6 heures</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- TOKEN STATUS -->
+      <div id="token-status-bar" class="token-status ok">
+        <div class="dot"></div>
+        <span id="token-status-text">Token Songstats actif</span>
+        <a href="https://developer.spotify.com/console/post-playlists" target="_blank" class="token-renew-btn" id="token-renew-btn">🔄 Renouveler</a>
+      </div>
+
+      <div class="section-title">Playlists sources Spotify</div>
+      <div style="margin-bottom:1.25rem" id="sources-container">
+        <div class="src-block" id="block-s">
+          <div class="src-row">
+            <span class="src-label" style="color:var(--s-color)">💃 Salsa</span>
+            <input type="text" id="src-s" value="6SzueO7QgQjoPicIO9Lkqn" placeholder="ID ou lien Spotify" style="flex:1"/>
+            <button class="src-search-btn" onclick="openSearch('s','Salsa')">🔍</button>
+          </div>
+          <div class="src-selected" id="sel-s"></div>
+        </div>
+        <div class="src-block" id="block-b">
+          <div class="src-row">
+            <span class="src-label" style="color:var(--b-color)">🌹 Bachata</span>
+            <input type="text" id="src-b" value="2Ef6Ltu5hNVWmUySmwTUe1" placeholder="ID ou lien Spotify" style="flex:1"/>
+            <button class="src-search-btn" onclick="openSearch('b','Bachata')">🔍</button>
+          </div>
+          <div class="src-selected" id="sel-b"></div>
+        </div>
+        <div class="src-block" id="block-k">
+          <div class="src-row">
+            <span class="src-label" style="color:var(--k-color)">🌙 Kizomba</span>
+            <input type="text" id="src-k" value="0O6sDyu0Ft8UCRkoMTmBp2" placeholder="ID ou lien Spotify" style="flex:1"/>
+            <button class="src-search-btn" onclick="openSearch('k','Kizomba')">🔍</button>
+          </div>
+          <div class="src-selected" id="sel-k"></div>
+        </div>
+        <div class="src-block" id="block-ko">
+          <div class="src-row">
+            <span class="src-label" style="color:var(--ko-color)">🎺 Konpa</span>
+            <input type="text" id="src-ko" value="2RBapGnytZlnFLwMkcsdxt" placeholder="ID ou lien Spotify" style="flex:1"/>
+            <button class="src-search-btn" onclick="openSearch('ko','Konpa')">🔍</button>
+          </div>
+          <div class="src-selected" id="sel-ko"></div>
+        </div>
+      </div>
+
+      <!-- MODAL RECHERCHE -->
+      <div id="search-modal" class="modal-overlay hidden">
+        <div class="modal-box">
+          <div class="modal-header">
+            <span id="modal-genre-title">Rechercher une playlist</span>
+            <button onclick="closeSearch()" class="modal-close">✕</button>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:1rem">
+            <input type="text" id="search-input" placeholder="Ex: salsa 2026, bachata sensual..." style="flex:1"/>
+            <button class="btn-search-go" id="search-go-btn">Rechercher</button>
+          </div>
+          <div id="search-results"></div>
+        </div>
+      </div>
+
+      <div class="section-title">Répartition SBK par rotation</div>
+      <table class="genre-table">
+        <thead><tr>
+          <th>Genre</th><th>Total/rotation</th>
+          <th>Classiques<br><span style="font-weight:400;font-size:10px">(avant seuil)</span></th>
+          <th>Récents<br><span style="font-weight:400;font-size:10px;color:var(--green)">(après seuil)</span></th>
+        </tr></thead>
+        <tbody>
+          <tr><td><div class="genre-label"><div class="genre-dot s"></div>Salsa</div></td><td><input type="number" id="nb-s" value="3" min="1" max="8" oninput="updateTimeline()"></td><td><input type="number" id="cl-s" value="1" min="0" max="8"></td><td><input type="number" id="re-s" value="2" min="0" max="8"></td></tr>
+          <tr><td><div class="genre-label"><div class="genre-dot b"></div>Bachata</div></td><td><input type="number" id="nb-b" value="3" min="1" max="8" oninput="updateTimeline()"></td><td><input type="number" id="cl-b" value="1" min="0" max="8"></td><td><input type="number" id="re-b" value="2" min="0" max="8"></td></tr>
+          <tr><td><div class="genre-label"><div class="genre-dot k"></div>Kizomba</div></td><td><input type="number" id="nb-k" value="3" min="1" max="8" oninput="updateTimeline()"></td><td><input type="number" id="cl-k" value="1" min="0" max="8"></td><td><input type="number" id="re-k" value="2" min="0" max="8"></td></tr>
+        </tbody>
+      </table>
+
+      <div class="konpa-box">
+        <div class="section-title">🎺 Phase Konpa</div>
+        <div class="time-grid">
+          <div><label>Heure de début de soirée</label><input type="time" id="time-start" value="23:00" oninput="updateTimeline()"/></div>
+          <div><label>Heure de début du Konpa</label><input type="time" id="time-konpa" value="02:15" oninput="updateTimeline()"/></div>
+        </div>
+        <table class="genre-table" style="margin-bottom:1rem">
+          <thead><tr><th>Genre</th><th>Total/rotation</th><th>Classiques</th><th>Récents</th></tr></thead>
+          <tbody>
+            <tr><td><div class="genre-label"><div class="genre-dot ko"></div>Konpa</div></td><td><input type="number" id="nb-ko" value="3" min="1" max="8" oninput="updateTimeline()"></td><td><input type="number" id="cl-ko" value="1" min="0" max="8"></td><td><input type="number" id="re-ko" value="2" min="0" max="8"></td></tr>
+          </tbody>
+        </table>
+        <div class="timeline-preview" id="timeline-preview">Aperçu de la timeline…</div>
+      </div>
+
+      <div style="margin-bottom:1.25rem">
+        <label>Année limite classique / récent</label>
+        <select id="era-year">
+          <option value="2018">Avant 2018 = classique</option>
+          <option value="2019">Avant 2019 = classique</option>
+          <option value="2020" selected>Avant 2020 = classique</option>
+          <option value="2021">Avant 2021 = classique</option>
+          <option value="2022">Avant 2022 = classique</option>
+        </select>
+      </div>
+
+      <!-- SECTION ÉNERGIE -->
+      <div class="energy-box">
+        <div class="section-title">⚡ Courbe d'énergie</div>
+        <div class="energy-modes">
+          <button class="energy-mode-btn active" data-mode="waves" onclick="setEnergyMode('waves',this)">🌊 Vagues</button>
+          <button class="energy-mode-btn" data-mode="pyramid" onclick="setEnergyMode('pyramid',this)">🏔️ Pyramide</button>
+          <button class="energy-mode-btn" data-mode="contrast" onclick="setEnergyMode('contrast',this)">🎭 Contrastes</button>
+          <button class="energy-mode-btn" data-mode="manual" onclick="setEnergyMode('manual',this)">🎯 Égaliseur</button>
+        </div>
+        <div class="energy-curve" id="energy-curve-container">
+          <canvas id="energy-canvas"></canvas>
+        </div>
+        <div class="manual-eq" id="manual-eq" style="display:none"></div>
+      </div>
+
+      <button class="btn-green" id="gen-btn">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+        Générer la playlist sur Spotify
+      </button>
+    </div>
+  </section>
+
+  <section id="progress-section">
+    <div class="section-title">Génération en cours…</div>
+    <div class="card">
+      <div class="progress-wrap"><div class="progress-bar" id="progress-bar"></div></div>
+      <div id="progress-log"></div>
+      <div id="tracks-preview"></div>
+    </div>
+  </section>
+
+  <!-- MODALE ADMIN BPM -->
+  <div id="admin-bpm-modal" class="modal-overlay hidden">
+    <div class="modal-box" style="max-width:640px;max-height:85vh;overflow-y:auto;">
+      <div class="modal-header">
+        <span>📋 Saisir les BPM manquants</span>
+        <button onclick="closeAdminBPM()" class="modal-close">✕</button>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:1rem">Pour chaque titre, clique sur Tunebat pour trouver le BPM et le Camelot, puis sauvegarde.</p>
+      <div id="admin-bpm-list"></div>
+      <div style="margin-top:1rem;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button onclick="saveAllManualBPM()" class="btn-green" style="padding:12px 24px;font-size:14px;background:var(--bg3);border:1px solid var(--border);color:var(--text);">💾 Sauvegarder tout</button>
+        <button onclick="saveAllManualBPM(true)" class="btn-green" style="padding:12px 24px;font-size:14px;">🎯 Sauvegarder et Finaliser</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANNEAU BPM MANQUANTS -->
+  <div id="missing-panel" style="display:none;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3);border-radius:12px;padding:1rem;margin:1rem 0;">
+    <div style="font-weight:600;color:#fbbf24;margin-bottom:0.5rem">⚠️ <span id="missing-count">0</span> titre(s) sans BPM</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:0.75rem">
+      1. Ouvre la playlist temporaire sur Spotify → active le Mixer → note les BPM<br>
+      2. Saisis les BPM dans Admin BPM<br>
+      3. Reviens ici et clique Finaliser
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center" id="missing-actions">
+      <button onclick="openAdminBPM()" class="btn-green" style="font-size:13px;padding:8px 16px;">📋 Saisir les BPM</button>
+      <button id="finalize-btn" style="display:none;font-size:13px;padding:8px 16px;cursor:pointer;" onclick="finalizePlaylist()" class="btn-green">🎯 Finaliser la playlist</button>
+    </div>
+  </div>
+
+  <section id="result-section">
+    <div class="result-card">
+      <h3>🎉 Playlist créée !</h3>
+      <p id="result-desc"></p>
+      <a id="result-link" href="#" target="_blank" class="btn-open">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Ouvrir dans Spotify
+      </a>
+    </div>
+  </section>
+</div>
+
+<script>
+var CLIENT_ID = '8d38f9416611475b9108189802c111f8';
+var REDIRECT_URI = 'https://dj.anwadance.com';
+var SCOPES = 'playlist-modify-public playlist-modify-private playlist-read-private playlist-read-collaborative user-read-private user-read-email user-library-read user-follow-read';
+var TOKEN_ENDPOINT = 'https://dj.anwadance.com/callback.php';
+var accessToken = null;  // token OAuth utilisateur (créer playlists)
+var readToken = null;    // token stocké par l'extension
+
+async function getReadToken() {
+  if (readToken) return readToken;
+  try {
+    var res = await fetch('https://dj.anwadance.com/admin.php');
+    var data = await res.json();
+    if (data.success && data.token) {
+      readToken = data.token;
+      return readToken;
+    }
+  } catch(e) {}
+  return null;
+}
+
+function connectSpotify() {
+  window.location.href = 'https://accounts.spotify.com/authorize?' + new URLSearchParams({
+    response_type: 'code',
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    redirect_uri: REDIRECT_URI
+  });
+}
+
+async function exchangeCode(code) {
+  var res = await fetch(TOKEN_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ grant_type: 'authorization_code', code: code })
+  });
+  var data = await res.json();
+  if (!data.access_token) { showConnect(); return; }
+  saveToken(data);
+  await loadUser();
+}
+
+async function doRefresh() {
+  var refresh = localStorage.getItem('spotify_refresh');
+  if (!refresh) return false;
+  var res = await fetch(TOKEN_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ grant_type: 'refresh_token', refresh_token: refresh })
+  });
+  var data = await res.json();
+  if (!data.access_token) return false;
+  saveToken(data);
+  return true;
+}
+
+function saveToken(data) {
+  accessToken = data.access_token;
+  var exp = Date.now() + (data.expires_in * 1000);
+  localStorage.setItem('spotify_token', accessToken);
+  localStorage.setItem('spotify_exp', exp.toString());
+  if (data.refresh_token) localStorage.setItem('spotify_refresh', data.refresh_token);
+}
+
+function showConnect() {
+  document.getElementById('loading-section').classList.add('hidden');
+  document.getElementById('connect-section').classList.remove('hidden');
+}
+function showConfig() {
+  document.getElementById('loading-section').classList.add('hidden');
+  document.getElementById('connect-section').classList.add('hidden');
+  document.getElementById('config-section').classList.remove('hidden');
+  updateTimeline();
+  loadSavedSources();
+  setTimeout(drawEnergyCurve, 100);
+  startTokenMonitor();
+
+  // Restaurer le panneau si une génération est en attente
+  var pendingList = localStorage.getItem('anwa_pending_list');
+  if (pendingList) {
+    try {
+      window._lastList = JSON.parse(pendingList);
+      window._lastName = localStorage.getItem('anwa_pending_name') || 'ANWA SBK';
+      window._lastSbkRot = parseInt(localStorage.getItem('anwa_pending_sbkRot') || '0');
+      window._lastKoRot = parseInt(localStorage.getItem('anwa_pending_koRot') || '0');
+      var missing = window._lastList.filter(function(i){ return i.track && i.bpmFallback; });
+      if (missing.length > 0) {
+        var mp = document.getElementById('missing-panel');
+        var mc = document.getElementById('missing-count');
+        var fb = document.getElementById('finalize-btn');
+        if (mp) mp.style.display = 'block';
+        if (mc) mc.textContent = missing.length;
+        if (fb) fb.style.display = 'inline-flex';
+      }
+    } catch(e) {}
+  }
+}
+
+async function loadUser() {
+  try {
+    var res = await fetch('https://api.spotify.com/v1/me', { headers: { Authorization: 'Bearer ' + accessToken } });
+    var data = await res.json();
+    if (!data.id) { showConnect(); return; }
+    document.getElementById('status-dot').classList.add('connected');
+    document.getElementById('status-text').style.display = 'none';
+    var ui = document.getElementById('user-info'); ui.style.display = 'flex';
+    if (data.images && data.images.length > 0) document.getElementById('user-avatar').src = data.images[0].url;
+    else document.getElementById('user-avatar').style.display = 'none';
+    document.getElementById('user-name').textContent = data.display_name || data.id;
+    showConfig();
+  } catch(e) { showConnect(); }
+}
+
+function timeToMinutes(t) { var p=t.split(':'); return parseInt(p[0])*60+parseInt(p[1]); }
+function minutesToTime(m) {
+  m=((m%1440)+1440)%1440; var h=Math.floor(m/60)%24, mn=m%60;
+  return (h<10?'0':'')+h+'h'+(mn<10?'0':'')+mn;
+}
+function updateTimeline() {
+  var s=timeToMinutes(document.getElementById('time-start').value);
+  var k=timeToMinutes(document.getElementById('time-konpa').value);
+  var d=parseInt(document.getElementById('duree').value)*60;
+  var off=k-s; if(off<0)off+=1440;
+  var ns=parseInt(document.getElementById('nb-s').value)||3;
+  var nb=parseInt(document.getElementById('nb-b').value)||3;
+  var nk=parseInt(document.getElementById('nb-k').value)||3;
+  var nko=parseInt(document.getElementById('nb-ko').value)||3;
+  var per=ns+nb+nk, rotS=Math.floor(off/(per*4)), durS=rotS*per*4;
+  var rotK=Math.ceil((d-durS)/(nko*4));
+  document.getElementById('timeline-preview').innerHTML=
+    '<span class="sbk">● SBK</span> '+minutesToTime(s)+' → '+minutesToTime(s+durS)+' ('+rotS+' rotations · '+(rotS*per)+' titres)<br>'+
+    '<span class="ko">● KONPA</span> '+minutesToTime(s+durS)+' → '+minutesToTime(s+d)+' ('+rotK+' rotations · '+(rotK*nko)+' titres)';
+}
+
+function extractId(v) { v=v.trim(); var m=v.match(/playlist\/([a-zA-Z0-9]+)/); return m?m[1]:v; }
+function log(msg,type) {
+  var d=document.createElement('div'); d.className='log-line '+(type||'info'); d.textContent=msg;
+  document.getElementById('progress-log').appendChild(d); d.scrollIntoView({behavior:'smooth'});
+}
+function setProgress(p) { document.getElementById('progress-bar').style.width=p+'%'; }
+function shuffle(arr) {
+  var a=arr.slice();
+  for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}
+  return a;
+}
+function addTrackPreview(g,title,artist,year,eraYear,timeStr,bpmStr,key) {
+  var isRecent = year >= eraYear;
+  var el=document.createElement('div'); el.className='track-item';
+  el.innerHTML='<span class="track-badge '+g+'">'+g+'</span>'+
+    '<div style="flex:1"><div class="track-name">'+title+'</div><div class="track-artist">'+artist+'</div></div>'+
+    '<span class="track-year '+(isRecent?'recent':'classic')+'">'+year+'</span>'+
+    (bpmStr?'<span class="track-bpm">'+bpmStr+(key?' · '+key:'')+'</span>':'')+
+    '<span class="track-time">'+timeStr+'</span>';
+  document.getElementById('tracks-preview').appendChild(el);
+}
+
+async function ensureToken() {
+  var exp=parseInt(localStorage.getItem('spotify_exp')||'0');
+  if (Date.now() > exp - 60000) {
+    var ok = await doRefresh();
+    if (!ok) { showConnect(); return false; }
+  }
+  return true;
+}
+
+async function loadPlaylist(id) {
+  var token = await getReadToken() || accessToken;
+  var tracks=[];
+  function fetchPage(url) {
+    return fetch(url,{headers:{Authorization:'Bearer '+token}})
+      .then(function(r){return r.json();})
+      .then(function(data){
+        if(data.items){
+          data.items.forEach(function(item){
+            if(item.track&&item.track.uri&&item.track.uri.indexOf('spotify:track:')===0){
+              var rd=item.track.album?item.track.album.release_date:'0000';
+              tracks.push({uri:item.track.uri,name:item.track.name,artist:item.track.artists[0]?item.track.artists[0].name:'',year:parseInt(rd.substring(0,4))||0});
+            }
+          });
+        }
+        if(data.next) return fetchPage(data.next);
+        return tracks;
+      });
+  }
+  return fetchPage('https://api.spotify.com/v1/playlists/'+id+'/items?limit=100&market=FR&fields=next,items(track(uri,name,artists,album(release_date)))');
+}
+
+// ── Recherche de playlists ────────────────────────────────────────────────────
+var currentSearchGenre = null;
+
+function openSearch(genre, label) {
+  currentSearchGenre = genre;
+  document.getElementById('modal-genre-title').textContent = '🔍 Rechercher une playlist ' + label;
+  document.getElementById('search-input').value = label;
+  document.getElementById('search-results').innerHTML = '';
+  document.getElementById('search-modal').classList.remove('hidden');
+  document.getElementById('search-input').focus();
+  doSearch(false);
+}
+
+function closeSearch() {
+  document.getElementById('search-modal').classList.add('hidden');
+  currentSearchGenre = null;
+}
+
+var searchOffset = 0;
+var searchTotal = 0;
+
+async function doSearch(append) {
+  const query = document.getElementById('search-input').value.trim();
+  if (!query) return;
+  const token = await getReadToken() || accessToken;
+  if (!token) { alert('Token non disponible'); return; }
+
+  if (!append) {
+    searchOffset = 0;
+    document.getElementById('search-results').innerHTML = '<div class="search-loading">🔍 Recherche en cours…</div>';
+  } else {
+    // Retirer le bouton "Voir plus" existant
+    var existing = document.getElementById('load-more-btn');
+    if (existing) existing.remove();
+  }
+
+  try {
+    const res = await fetch(
+      'https://api.spotify.com/v1/search?q=' + encodeURIComponent(query) + '&type=playlist&limit=10&offset=' + searchOffset + '&market=FR',
+      { headers: { Authorization: 'Bearer ' + token } }
+    );
+    const data = await res.json();
+    console.log('Spotify search response:', data);
+    const playlists = data.playlists ? data.playlists.items.filter(p => p) : [];
+    searchTotal = data.playlists ? data.playlists.total : 0;
+    searchOffset += playlists.length;
+
+    const container = document.getElementById('search-results');
+    if (!append) container.innerHTML = '';
+
+    if (!playlists.length) {
+      container.innerHTML = '<div class="search-empty">Aucun résultat trouvé</div>';
+      return;
+    }
+
+    playlists.forEach(function(pl) {
+      const img = pl.images && pl.images.length ? pl.images[0].url : '';
+      const div = document.createElement('div');
+      div.className = 'playlist-result';
+      div.innerHTML =
+        (img ? '<img class="playlist-img" src="' + img + '" alt="">' : '<div class="playlist-img"></div>') +
+        '<div class="playlist-info">' +
+          '<div class="playlist-name">' + pl.name + '</div>' +
+          '<div class="playlist-meta">' + (pl.owner ? pl.owner.display_name : '') + ' · ' + (pl.tracks ? pl.tracks.total : '?') + ' titres</div>' +
+        '</div>' +
+        '<button class="playlist-select-btn" data-id="' + pl.id + '" data-name="' + pl.name.replace(/"/g,'&quot;') + '">Choisir</button>';
+      container.appendChild(div);
+    });
+
+    // Bouton "Voir plus" si encore des résultats
+    if (searchOffset < searchTotal) {
+      var moreBtn = document.createElement('button');
+      moreBtn.id = 'load-more-btn';
+      moreBtn.className = 'btn-green';
+      moreBtn.style.cssText = 'margin-top:10px;padding:10px;font-size:13px;border-radius:10px;';
+      moreBtn.textContent = 'Voir plus (' + (searchTotal - searchOffset) + ' résultats restants)';
+      moreBtn.onclick = function() { doSearch(true); };
+      container.appendChild(moreBtn);
+    }
+  } catch(e) {
+    document.getElementById('search-results').innerHTML = '<div class="search-empty">Erreur : ' + e.message + '</div>';
+  }
+}
+
+function selectPlaylist(id, name) {
+  if (!currentSearchGenre) return;
+  document.getElementById('src-' + currentSearchGenre).value = id;
+  document.getElementById('sel-' + currentSearchGenre).textContent = '✓ ' + name;
+  // Sauvegarder dans localStorage
+  var saved = JSON.parse(localStorage.getItem('anwa_sources') || '{}');
+  saved[currentSearchGenre] = { id: id, name: name };
+  localStorage.setItem('anwa_sources', JSON.stringify(saved));
+  closeSearch();
+}
+
+function saveSources() {
+  // Sauvegarder les champs même sans recherche (si collé manuellement)
+  var saved = JSON.parse(localStorage.getItem('anwa_sources') || '{}');
+  ['s','b','k','ko'].forEach(function(g) {
+    var val = document.getElementById('src-' + g).value.trim();
+    if (val) {
+      saved[g] = saved[g] || {};
+      saved[g].id = val;
+    }
+  });
+  localStorage.setItem('anwa_sources', JSON.stringify(saved));
+}
+
+function loadSavedSources() {
+  var saved = JSON.parse(localStorage.getItem('anwa_sources') || '{}');
+  ['s','b','k','ko'].forEach(function(g) {
+    if (saved[g]) {
+      if (saved[g].id) document.getElementById('src-' + g).value = saved[g].id;
+      if (saved[g].name) document.getElementById('sel-' + g).textContent = '✓ ' + saved[g].name;
+    }
+  });
+}
+
+// ── FINALISATION ─────────────────────────────────────────────────────────────
+async function finalizePlaylist() {
+  // Restaurer depuis localStorage si nécessaire
+  if (!window._lastList) {
+    var saved = localStorage.getItem('anwa_pending_list');
+    if (saved) {
+      window._lastList = JSON.parse(saved);
+      window._lastName = localStorage.getItem('anwa_pending_name') || 'ANWA SBK';
+      window._lastSbkRot = parseInt(localStorage.getItem('anwa_pending_sbkRot') || '0');
+      window._lastKoRot = parseInt(localStorage.getItem('anwa_pending_koRot') || '0');
+    }
+  }
+  if (!window._lastList) {
+    alert('Génère d\'abord une playlist !');
+    return;
+  }
+  
+  var btn = document.getElementById('finalize-btn');
+  btn.textContent = '⏳ Récupération BPM...';
+  btn.disabled = true;
+
+  // Re-récupérer les BPM (les manuels seront maintenant disponibles)
+  var uris = window._lastList.filter(function(i){return i.track;}).map(function(i){return i.track.uri;});
+  var bpmData = await fetchBPMs(uris, window._lastList);
+  
+  // Réassigner BPM
+  window._lastList.forEach(function(item) {
+    if (!item.track) return;
+    var id = item.track.uri.replace('spotify:track:', '');
+    var info = bpmData[id];
+    if (info && info.bpm) {
+      item.bpm = parseFloat(info.bpm);
+      item.key = info.key;
+      item.camelot = info.camelot;
+      item.bpmFallback = false;
+    }
+  });
+
+  // Récupérer les params de rotation
+  var p = getRotationParams();
+  var sbkRot = p.sbkRot, koRot = p.koRot;
+
+  btn.textContent = '⏳ Réoptimisation...';
+
+  // Retrier avec les BPM mis à jour (manuels + Songstats)
+  var sorted = sortByBPM(window._lastList, bpmData, sbkRot, koRot);
+  window._lastList = sorted; // Mettre à jour la liste principale
+  var newUris = sorted.filter(function(i){return i.track;}).map(function(i){return i.track.uri;});
+  log('✓ Playlist réordonnée avec les BPM mis à jour', 'ok');
+
+  // Créer la playlist principale maintenant que tous les BPM sont disponibles
+  btn.textContent = '⏳ Création playlist Spotify...';
+  try {
+    var name = window._lastName || document.getElementById('playlist-name').value || 'ANWA SBK';
+    var writeToken = await getReadToken() || accessToken;
+    var cr = await fetch('https://api.spotify.com/v1/me/playlists', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + writeToken, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name, description: 'Playlist ANWA DJ — ' + new Date().toLocaleDateString('fr-FR'), public: true })
+    });
+    var pl = await cr.json();
+    if (!pl.id) { btn.textContent = '❌ Erreur création'; return; }
+
+    // Ajouter les titres par batch de 100
+    for (var i = 0; i < newUris.length; i += 100) {
+      await fetch('https://api.spotify.com/v1/playlists/' + pl.id + '/items', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + writeToken, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uris: newUris.slice(i, i+100) })
+      });
+    }
+
+    btn.textContent = '✅ Playlist créée !';
+    btn.style.background = 'var(--green)';
+    document.getElementById('missing-panel').style.display = 'none';
+    document.getElementById('result-section').style.display = 'block';
+    document.getElementById('result-link').href = pl.external_urls ? pl.external_urls.spotify : '#';
+    log('🎉 Playlist "' + name + '" créée avec ' + newUris.length + ' titres !', 'ok');
+    // Nettoyer localStorage
+    localStorage.removeItem('anwa_pending_list');
+    localStorage.removeItem('anwa_pending_name');
+    localStorage.removeItem('anwa_pending_sbkRot');
+    localStorage.removeItem('anwa_pending_koRot');
+    // Supprimer la playlist temporaire automatiquement
+    await deleteTempPlaylist();
+  } catch(e) {
+    btn.textContent = '❌ Erreur';
+    console.error(e);
+  }
+}
+
+// ── PLAYLIST TEMPORAIRE BPM ──────────────────────────────────────────────────
+async function createTempBPMPlaylist(missingItems) {
+  if (!missingItems || missingItems.length === 0) return;
+  
+  var token = await getReadToken() || accessToken;
+  log('🎵 Création playlist temporaire BPM Check...', 'info');
+
+  // Créer la playlist temporaire via /me/playlists (même endpoint que la playlist principale)
+  var res = await fetch('https://api.spotify.com/v1/me/playlists', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: '⏳ ANWA BPM Check — À SUPPRIMER',
+      description: 'Playlist temporaire pour vérifier les BPM manquants via Spotify Mixer. Supprimez après usage.',
+      public: false
+    })
+  });
+  var playlist = await res.json();
+  if (!playlist.id) { log('❌ Erreur création playlist temporaire', 'error'); return; }
+
+  // Ajouter les titres manquants
+  var uris = missingItems.map(function(i){ return i.track.uri; });
+  await fetch('https://api.spotify.com/v1/playlists/' + playlist.id + '/tracks', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ uris: uris })
+  });
+
+  // Stocker l'ID pour suppression ultérieure
+  window._tempPlaylistId = playlist.id;
+  localStorage.setItem('anwa_temp_playlist', playlist.id);
+
+  log('✅ Playlist temporaire créée : ' + missingItems.length + ' titre(s)', 'ok');
+  log('📱 Ouvre-la sur ton téléphone → active le Mixer → note les BPM', 'info');
+
+  // Afficher le lien
+  var panel = document.getElementById('missing-panel');
+  var actions = document.getElementById('missing-actions');
+  if (actions) {
+    var link = document.createElement('a');
+    link.href = 'https://open.spotify.com/playlist/' + playlist.id;
+    link.target = '_blank';
+    link.className = 'btn-green';
+    link.style.cssText = 'font-size:13px;padding:8px 16px;text-decoration:none;background:#1a78c2;';
+    link.textContent = '📱 Ouvrir sur Spotify';
+    actions.appendChild(link);
+
+    var delBtn = document.createElement('button');
+    delBtn.textContent = '🗑️ Supprimer playlist temp';
+    delBtn.className = 'btn-green';
+    delBtn.style.cssText = 'font-size:13px;padding:8px 16px;background:rgba(244,63,94,0.2);border:1px solid #f43f5e;color:#f43f5e;cursor:pointer;border-radius:8px;';
+    delBtn.onclick = deleteTempPlaylist;
+    actions.appendChild(delBtn);
+  }
+}
+
+async function deleteTempPlaylist() {
+  var playlistId = window._tempPlaylistId || localStorage.getItem('anwa_temp_playlist');
+  if (!playlistId) { alert('Aucune playlist temporaire trouvée'); return; }
+  
+  var token = await getReadToken() || accessToken;
+  var res = await fetch('https://api.spotify.com/v1/playlists/' + playlistId + '/followers', {
+    method: 'DELETE',
+    headers: { Authorization: 'Bearer ' + token }
+  });
+  
+  if (res.ok || res.status === 200) {
+    localStorage.removeItem('anwa_temp_playlist');
+    window._tempPlaylistId = null;
+    log('🗑️ Playlist temporaire supprimée', 'ok');
+    // Retirer les boutons
+    document.querySelectorAll('#missing-panel a[href*="spotify"], #missing-panel button[onclick*="deleteTempPlaylist"]').forEach(function(el){ el.remove(); });
+  }
+}
+
+async function getSpotifyUserId(token) {
+  try {
+    var res = await fetch('https://api.spotify.com/v1/me', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    var data = await res.json();
+    return data.id || null;
+  } catch(e) { return null; }
+}
+
+// ── MODALE ADMIN BPM ─────────────────────────────────────────────────────────
+function openAdminBPM() {
+  var modal = document.getElementById('admin-bpm-modal');
+  var list = document.getElementById('admin-bpm-list');
+  if (!modal || !list) return;
+
+  // Récupérer les titres sans BPM
+  var missing = window._lastList ? window._lastList.filter(function(i){ return i.track && i.bpmFallback; }) : [];
+  if (missing.length === 0) {
+    alert('Aucun titre manquant !');
+    return;
+  }
+
+  list.innerHTML = '';
+  missing.forEach(function(item) {
+    var id = item.track.uri.replace('spotify:track:', '');
+    var title = item.track.name;
+    var artist = item.track.artist;
+    var slug = (title + '-' + artist).replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '-');
+    var tunebatUrl = 'https://tunebat.com/Info/' + slug + '/' + id;
+
+    var div = document.createElement('div');
+    div.className = 'admin-bpm-card';
+    div.id = 'abpm-' + id;
+    div.innerHTML =
+      '<div class="admin-bpm-title">' + title + '</div>' +
+      '<div class="admin-bpm-artist">' + artist + '</div>' +
+      '<div class="admin-bpm-row">' +
+        '<div class="admin-bpm-field"><label>BPM *</label><input type="number" id="abpm-bpm-' + id + '" placeholder="120" step="0.1"></div>' +
+        '<div class="admin-bpm-field"><label>Camelot</label><input type="text" id="abpm-cam-' + id + '" placeholder="10A"></div>' +
+        '<a href="' + tunebatUrl + '" target="_blank" style="padding:7px 12px;background:#ff6b35;color:#fff;border-radius:8px;font-size:12px;text-decoration:none;align-self:flex-end;">🔍 Tunebat</a>' +
+        '<span class="admin-bpm-saved" id="abpm-saved-' + id + '" style="color:#1DB954;font-size:12px;display:none;align-self:flex-end;">✓ Sauvé !</span>' +
+      '</div>';
+    list.appendChild(div);
+  });
+
+  modal.classList.remove('hidden');
+
+
+}
+
+function closeAdminBPM() {
+  document.getElementById('admin-bpm-modal').classList.add('hidden');
+  // Mettre à jour le compteur de titres manquants
+  var missing = window._lastList ? window._lastList.filter(function(i){ return i.track && i.bpmFallback; }) : [];
+  var mc = document.getElementById('missing-count');
+  if (mc) mc.textContent = missing.length;
+  if (missing.length === 0) {
+    var fb = document.getElementById('finalize-btn');
+    if (fb) fb.style.display = 'inline-flex';
+  }
+}
+
+async function saveAllManualBPM(finalize) {
+  var missing = window._lastList ? window._lastList.filter(function(i){ return i.track && i.bpmFallback; }) : [];
+  var saved = 0;
+  for (var i = 0; i < missing.length; i++) {
+    var item = missing[i];
+    var id = item.track.uri.replace('spotify:track:', '');
+    var bpmEl = document.getElementById('abpm-bpm-' + id);
+    var camEl = document.getElementById('abpm-cam-' + id);
+    if (bpmEl && bpmEl.value) {
+      await saveManualBPM(id, item.track.name, item.track.artist);
+      saved++;
+    }
+  }
+  if (saved > 0) log('💾 ' + saved + ' BPM sauvegardés', 'ok');
+  if (finalize) {
+    closeAdminBPM();
+    finalizePlaylist();
+  }
+}
+
+async function saveManualBPM(id, title, artist) {
+  var bpm = document.getElementById('abpm-bpm-' + id).value;
+  var camelot = document.getElementById('abpm-cam-' + id).value;
+  if (!bpm) { alert('BPM requis !'); return; }
+
+  // Sauvegarder via admin_bpm.php
+  var form = new FormData();
+  form.append('action', 'save');
+  form.append('spotify_id', id);
+  form.append('bpm', bpm);
+  form.append('key', '');
+  form.append('camelot', camelot);
+  form.append('title', title);
+  form.append('artist', artist);
+
+  var r = await fetch('admin_bpm.php', { method: 'POST', body: form });
+  var d = await r.json();
+  if (d.success) {
+    // Mettre à jour dans window._lastList
+    window._lastList.forEach(function(item) {
+      if (!item.track) return;
+      var itemId = item.track.uri.replace('spotify:track:', '');
+      if (itemId === id) {
+        item.bpm = parseFloat(bpm);
+        item.key = null;
+        item.camelot = camelot;
+        item.bpmFallback = false;
+      }
+    });
+    // Feedback visuel
+    var saved = document.getElementById('abpm-saved-' + id);
+    if (saved) saved.style.display = 'inline';
+    document.getElementById('abpm-' + id).style.borderColor = '#1DB954';
+    log('✅ BPM sauvegardé : ' + title + ' → ' + bpm + ' BPM · ' + (camelot||''), 'ok');
+  }
+}
+
+// ── COMMUNICATION ADMIN BPM ──────────────────────────────────────────────────
+// Écouter les mises à jour de l'admin BPM via localStorage
+window.addEventListener('storage', function(e) {
+  if (e.key === 'anwa_bpm_updated') {
+    var data = JSON.parse(e.newValue || '{}');
+    log('✅ BPM mis à jour : ' + (data.title || '') + ' → ' + data.bpm + ' BPM · ' + (data.camelot || ''), 'ok');
+    
+    // Mettre à jour le compteur
+    var missing = window._lastList ? window._lastList.filter(function(i){ return i.track && i.bpmFallback; }) : [];
+    var mc = document.getElementById('missing-count');
+    if (mc) mc.textContent = missing.length;
+    
+    // Si plus de titres manquants → activer le bouton Finaliser
+    if (missing.length === 0) {
+      log('🎉 Tous les BPM sont renseignés ! Cliquez Finaliser pour créer la playlist.', 'ok');
+    }
+  }
+});
+
+// ── TOKEN STATUS ─────────────────────────────────────────────────────────────
+var tokenCheckInterval = null;
+
+function updateTokenStatus(status, message) {
+  var bar = document.getElementById('token-status-bar');
+  var text = document.getElementById('token-status-text');
+  if (!bar || !text) return;
+  bar.className = 'token-status ' + status;
+  text.textContent = message;
+}
+
+async function checkTokenStatus() {
+  try {
+    var token = await getReadToken();
+    if (!token) {
+      updateTokenStatus('error', '⚠️ Token expiré — cliquez Renouveler');
+      return false;
+    }
+    // Tester le token sur un appel léger
+    var res = await fetch('https://api.spotify.com/v1/me', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    if (res.status === 401 || res.status === 403) {
+      updateTokenStatus('error', '⚠️ Token invalide — cliquez Renouveler');
+      return false;
+    }
+    // Vérifier l'expiration (token dure 1h)
+    var info = await getTokenInfo();
+    if (info && info.expires_in < 600) { // moins de 10 min
+      updateTokenStatus('warn', '⏱️ Token expire bientôt — pensez à Renouveler');
+    } else {
+      var mins = info ? Math.floor(info.expires_in / 60) : '?';
+      updateTokenStatus('ok', '✅ Token actif — expire dans ~' + mins + ' min');
+    }
+    return true;
+  } catch(e) {
+    updateTokenStatus('warn', '⚠️ Impossible de vérifier le token');
+    return false;
+  }
+}
+
+async function getTokenInfo() {
+  try {
+    var res = await fetch('https://dj.anwadance.com/admin.php');
+    var data = await res.json();
+    return data.success ? data : null;
+  } catch(e) { return null; }
+}
+
+// Vérifier toutes les 5 minutes
+function startTokenMonitor() {
+  checkTokenStatus();
+  if (tokenCheckInterval) clearInterval(tokenCheckInterval);
+  tokenCheckInterval = setInterval(checkTokenStatus, 5 * 60 * 1000);
+}
+
+// ── ÉNERGIE ──────────────────────────────────────────────────────────────────
+var energyMode = 'waves';
+var manualLevels = {};
+
+function setEnergyMode(mode, btn) {
+  energyMode = mode;
+  document.querySelectorAll('.energy-mode-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  var eq = document.getElementById('manual-eq');
+  var curve = document.getElementById('energy-curve-container');
+  if (mode === 'manual') {
+    eq.style.display = 'block';
+    curve.style.display = 'none';
+    buildEqualizer();
+  } else {
+    eq.style.display = 'none';
+    curve.style.display = 'block';
+    drawEnergyCurve();
+  }
+}
+
+function getRotationParams() {
+  var nbS = parseInt(document.getElementById('nb-s').value) || 0;
+  var nbB = parseInt(document.getElementById('nb-b').value) || 0;
+  var nbK = parseInt(document.getElementById('nb-k').value) || 0;
+  var perSBK = nbS + nbB + nbK;
+  if (perSBK === 0) perSBK = 1; // éviter division par zéro
+  var duree = parseInt(document.getElementById('duree').value) || 4;
+  var startMin = timeToMinutes(document.getElementById('time-start').value);
+  var konpaMin = timeToMinutes(document.getElementById('time-konpa').value);
+  var off = konpaMin - startMin; if(off<0) off+=1440;
+  var sbkRot = Math.floor(off/(perSBK*4));
+  var nbKo = parseInt(document.getElementById('nb-ko').value) || 3;
+  var koRot = Math.ceil((duree*60 - sbkRot*perSBK*4)/(nbKo*4));
+  return { sbkRot: sbkRot, koRot: koRot, totalRot: sbkRot+koRot, startMin: startMin, duree: duree, perSBK: perSBK, nbKo: nbKo, nbS: nbS, nbB: nbB, nbK: nbK };
+}
+
+function getEnergyLevels(totalRot) {
+  var levels = [];
+  switch(energyMode) {
+    case 'waves':
+      for (var i=0;i<totalRot;i++) levels.push(0.25 + 0.75*Math.abs(Math.sin(i*Math.PI/3)));
+      break;
+    case 'pyramid':
+      var mid=(totalRot-1)/2;
+      for (var i=0;i<totalRot;i++) levels.push(0.15 + 0.85*(1-Math.abs(i-mid)/(mid||1)));
+      break;
+    case 'contrast':
+      for (var i=0;i<totalRot;i++) levels.push(i%2===0?0.9:0.2);
+      break;
+    case 'manual':
+      for (var i=0;i<totalRot;i++) levels.push((manualLevels[i]||3)/5);
+      break;
+    default:
+      for (var i=0;i<totalRot;i++) levels.push(0.5);
+  }
+  return levels;
+}
+
+function minutesToTimeStr(m) {
+  m=((m%1440)+1440)%1440;
+  var h=Math.floor(m/60)%24, mn=m%60;
+  return (h<10?'0':'')+h+'h'+(mn<10?'0':'')+mn;
+}
+
+function buildEqualizer() {
+  var p = getRotationParams();
+  var totalRot = p.totalRot;
+  var eq = document.getElementById('manual-eq');
+  var emojis = ['😴','😌','🎵','💃','🔥'];
+  var colors_sbk = ['rgba(29,185,84,VAL)'];
+  var colors_ko = ['rgba(244,63,94,VAL)'];
+
+  var html = '<div style="position:relative;padding-left:32px">';
+  // Labels Y
+  html += '<div class="eq-y-labels"><span class="eq-y-label">🔥</span><span class="eq-y-label">🎵</span><span class="eq-y-label">😴</span></div>';
+  html += '<div class="eq-bars" id="eq-bars">';
+
+  for (var i=0; i<totalRot; i++) {
+    var isKonpa = i >= p.sbkRot;
+    var val = manualLevels[i] !== undefined ? manualLevels[i] : 3;
+    var pct = (val/5*100);
+    var color = isKonpa
+      ? 'rgba(244,63,94,'+( 0.4+val/5*0.6)+')'
+      : 'rgba(29,185,84,'+(0.4+val/5*0.6)+')';
+    
+    // Calculer l'heure de cette rotation
+    var rotMin = p.startMin + i * p.perSBK * 4;
+    if (isKonpa) rotMin = p.startMin + p.sbkRot * p.perSBK * 4 + (i - p.sbkRot) * p.nbKo * 4;
+    var timeLabel = minutesToTimeStr(rotMin);
+
+    html += '<div class="eq-bar-wrap" id="eq-wrap-'+i+'">' +
+      '<div class="eq-bar-track" onclick="cycleBarLevel('+i+',this)">' +
+        '<div class="eq-bar-fill" id="eq-fill-'+i+'" style="height:'+pct+'%;background:'+color+';"></div>' +
+      '</div>' +
+      '<div class="eq-bar-label">' + (isKonpa?'<span style="color:var(--ko-color)">K</span>':'<span style="color:var(--green)">S</span>') + '<br>' + timeLabel + '</div>' +
+    '</div>';
+  }
+
+  html += '</div>';
+  // Ligne temps
+  html += '<div class="eq-time-row">';
+  html += '<span class="eq-time-label">'+minutesToTimeStr(p.startMin)+'</span>';
+  if (p.sbkRot > 0 && p.koRot > 0) {
+    html += '<span class="eq-time-label" style="color:var(--ko-color)">▸ Konpa '+minutesToTimeStr(p.startMin + p.sbkRot*p.perSBK*4)+'</span>';
+  }
+  html += '<span class="eq-time-label">'+minutesToTimeStr(p.startMin+p.duree*60)+'</span>';
+  html += '</div>';
+  html += '</div>';
+
+  eq.innerHTML = html;
+}
+
+function cycleBarLevel(idx, barEl) {
+  var current = manualLevels[idx] || 3;
+  // Permettre le clic pour monter/descendre
+  var fill = document.getElementById('eq-fill-'+idx);
+  if (!fill) return;
+  
+  // Calculer la position du clic dans la barre
+  var rect = barEl.getBoundingClientRect();
+  var relY = rect.bottom - (event ? event.clientY : rect.top + rect.height/2);
+  var newVal = Math.max(1, Math.min(5, Math.round(relY / rect.height * 5)));
+  manualLevels[idx] = newVal;
+  
+  var p = getRotationParams();
+  var isKonpa = idx >= p.sbkRot;
+  var color = isKonpa
+    ? 'rgba(244,63,94,'+(0.4+newVal/5*0.6)+')'
+    : 'rgba(29,185,84,'+(0.4+newVal/5*0.6)+')';
+  fill.style.height = (newVal/5*100)+'%';
+  fill.style.background = color;
+}
+
+function drawEnergyCurve() {
+  var canvas = document.getElementById('energy-canvas');
+  if (!canvas || !canvas.getContext) return;
+  
+  var container = document.getElementById('energy-curve-container');
+  canvas.width = container.offsetWidth || 500;
+  canvas.height = container.offsetHeight || 130;
+  
+  var p = getRotationParams();
+  var levels = getEnergyLevels(p.totalRot);
+  var W = canvas.width, H = canvas.height;
+  var padL = 28, padR = 12, padT = 16, padB = 32;
+  var ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+
+  if (levels.length < 2) return;
+
+  // Grille horizontale
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  ctx.lineWidth = 1;
+  for (var i=0;i<=4;i++) {
+    var y = padT + (i/4) * (H-padT-padB);
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W-padR, y); ctx.stroke();
+  }
+
+  // Labels Y
+  var yLabels = ['🔥','💃','🎵','😌','😴'];
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.font = '11px sans-serif';
+  ctx.textAlign = 'right';
+  for (var i=0;i<5;i++) {
+    var y = padT + (i/4)*(H-padT-padB);
+    ctx.fillText(yLabels[i], padL-4, y+4);
+  }
+
+  // Labels X (heures)
+  ctx.textAlign = 'center';
+  ctx.font = '9px Space Mono, monospace';
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  var step = Math.max(1, Math.floor(levels.length/6));
+  for (var i=0;i<levels.length;i+=step) {
+    var x = padL + (i/(levels.length-1))*(W-padL-padR);
+    var isKonpa = i >= p.sbkRot;
+    var rotMin = p.startMin + i * p.perSBK * 4;
+    if (isKonpa) rotMin = p.startMin + p.sbkRot*p.perSBK*4 + (i-p.sbkRot)*p.nbKo*4;
+    ctx.fillStyle = isKonpa ? 'rgba(244,63,94,0.6)' : 'rgba(255,255,255,0.3)';
+    ctx.fillText(minutesToTimeStr(rotMin), x, H-6);
+  }
+
+  // Ligne de séparation Konpa
+  if (p.koRot > 0 && p.sbkRot > 0 && p.sbkRot < levels.length) {
+    var kx = padL + (p.sbkRot/(levels.length-1))*(W-padL-padR);
+    ctx.beginPath(); ctx.moveTo(kx, padT); ctx.lineTo(kx, H-padB);
+    ctx.strokeStyle = 'rgba(244,63,94,0.5)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([5,4]);
+    ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = '#f43f5e';
+    ctx.font = '9px Space Mono, monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText('KONPA', kx+3, padT+10);
+  }
+
+  // Zone SBK (gradient vert)
+  var sbkEndX = p.sbkRot > 0 && p.sbkRot < levels.length
+    ? padL + (p.sbkRot/(levels.length-1))*(W-padL-padR)
+    : W-padR;
+
+  // Courbe SBK
+  ctx.beginPath();
+  for (var i=0;i<Math.min(p.sbkRot+1,levels.length);i++) {
+    var x = padL + (i/(levels.length-1))*(W-padL-padR);
+    var y = padT + (1-levels[i])*(H-padT-padB);
+    if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  }
+  // Remplissage
+  var sbkGrad = ctx.createLinearGradient(0, padT, 0, H-padB);
+  sbkGrad.addColorStop(0,'rgba(29,185,84,0.35)');
+  sbkGrad.addColorStop(1,'rgba(29,185,84,0.02)');
+  var lastSBK = Math.min(p.sbkRot, levels.length-1);
+  ctx.lineTo(padL+(lastSBK/(levels.length-1))*(W-padL-padR), H-padB);
+  ctx.lineTo(padL, H-padB);
+  ctx.closePath();
+  ctx.fillStyle = sbkGrad;
+  ctx.fill();
+
+  // Re-tracer la ligne SBK propre
+  ctx.beginPath();
+  for (var i=0;i<Math.min(p.sbkRot+1,levels.length);i++) {
+    var x = padL + (i/(levels.length-1))*(W-padL-padR);
+    var y = padT + (1-levels[i])*(H-padT-padB);
+    if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  }
+  ctx.strokeStyle = '#1DB954';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // Courbe Konpa
+  if (p.koRot > 0 && p.sbkRot < levels.length) {
+    ctx.beginPath();
+    for (var i=p.sbkRot;i<levels.length;i++) {
+      var x = padL + (i/(levels.length-1))*(W-padL-padR);
+      var y = padT + (1-levels[i])*(H-padT-padB);
+      if (i===p.sbkRot) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    var koGrad = ctx.createLinearGradient(0,padT,0,H-padB);
+    koGrad.addColorStop(0,'rgba(244,63,94,0.35)');
+    koGrad.addColorStop(1,'rgba(244,63,94,0.02)');
+    ctx.lineTo(W-padR, H-padB);
+    ctx.lineTo(padL+(p.sbkRot/(levels.length-1))*(W-padL-padR), H-padB);
+    ctx.closePath();
+    ctx.fillStyle = koGrad;
+    ctx.fill();
+
+    ctx.beginPath();
+    for (var i=p.sbkRot;i<levels.length;i++) {
+      var x = padL + (i/(levels.length-1))*(W-padL-padR);
+      var y = padT + (1-levels[i])*(H-padT-padB);
+      if (i===p.sbkRot) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.strokeStyle = '#f43f5e';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+  }
+
+  // Points sur la courbe
+  for (var i=0;i<levels.length;i++) {
+    var x = padL + (i/(levels.length-1))*(W-padL-padR);
+    var y = padT + (1-levels[i])*(H-padT-padB);
+    ctx.beginPath(); ctx.arc(x,y,4,0,Math.PI*2);
+    ctx.fillStyle = i>=p.sbkRot ? '#f43f5e' : '#1DB954';
+    ctx.fill();
+  }
+}
+
+// ── BPM ──────────────────────────────────────────────────────────────────────
+// ── BPM ──────────────────────────────────────────────────────────────────────
+async function fetchBPMs(uris, list) {
+  var ids = uris.map(function(uri) { return uri.replace('spotify:track:', ''); });
+  // Préparer les infos titre+artiste pour le log des manquants
+  var trackInfo = {};
+  if (list) {
+    list.forEach(function(item) {
+      if (!item.track) return;
+      var id = item.track.uri.replace('spotify:track:', '');
+      trackInfo[id] = { title: item.track.name, artist: item.track.artist };
+    });
+  }
+  
+  // Traiter par batch de 20 pour éviter les timeouts
+  var allResults = {};
+  var batchSize = 20;
+  for (var i = 0; i < ids.length; i += batchSize) {
+    var batchIds = ids.slice(i, i + batchSize);
+    var batchInfo = {};
+    batchIds.forEach(function(id) { if (trackInfo[id]) batchInfo[id] = trackInfo[id]; });
+    try {
+      var res = await fetch('https://dj.anwadance.com/bpm.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: batchIds, track_info: batchInfo })
+      });
+      var data = await res.json();
+      Object.assign(allResults, data.results || {});
+    } catch(e) {
+      console.log('BPM fetch error batch ' + i + ':', e);
+    }
+  }
+  return allResults;
+}
+
+// Compatibilité Camelot : retourne un score (0=incompatible, 1=ok, 2=parfait)
+function camelotScore(a, b) {
+  if (!a || !b) return 0;
+  var numA = parseInt(a), numB = parseInt(b);
+  var letA = a.slice(-1), letB = b.slice(-1);
+  if (isNaN(numA) || isNaN(numB)) return 0;
+  if (numA === numB && letA === letB) return 2; // identique = parfait
+  if (numA === numB && letA !== letB) return 1; // même chiffre, lettre différente = ok
+  var diff = Math.abs(numA - numB);
+  if (diff === 1 || diff === 11) return letA === letB ? 2 : 1; // adjacent = bon
+  return 0;
+}
+
+// Réordonner un tableau selon Camelot (greedy nearest neighbor)
+function reorderByCamelot(items) {
+  if (items.length <= 1) return items;
+  var remaining = items.slice();
+  var result = [remaining.splice(0, 1)[0]];
+  while (remaining.length > 0) {
+    var last = result[result.length - 1];
+    var bestIdx = 0, bestScore = -1;
+    for (var i = 0; i < remaining.length; i++) {
+      // Score combiné : Camelot + BPM proche
+      var cScore = camelotScore(last.camelot, remaining[i].camelot) * 100;
+      var bpmDiff = last.bpm && remaining[i].bpm ? Math.abs(last.bpm - remaining[i].bpm) : 50;
+      var totalScore = cScore - bpmDiff;
+      if (totalScore > bestScore) { bestScore = totalScore; bestIdx = i; }
+    }
+    result.push(remaining.splice(bestIdx, 1)[0]);
+  }
+  return result;
+}
+
+function sortByBPM(list, bpmData, sbkRot, koRot) {
+  // Étape 1 : Assigner BPM, Key et Camelot à chaque titre
+  list.forEach(function(item) {
+    if (!item.track) return;
+    var id = item.track.uri.replace('spotify:track:', '');
+    var info = bpmData[id];
+    if (info && info.bpm) {
+      // Données réelles Songstats/MeloData/Manuel
+      item.bpm = parseFloat(info.bpm);
+      item.key = info.key || null;
+      item.camelot = info.camelot || null;
+      item.bpmFallback = false;
+    } else {
+      // Pas de BPM trouvé — laisser null pour le workflow manuel
+      item.bpm = null;
+      item.key = null;
+      item.camelot = null;
+      item.bpmFallback = true;
+    }
+  });
+
+  // Étape 2 : Obtenir les niveaux d'énergie par rotation
+  var totalRot = sbkRot + koRot;
+  var levels = getEnergyLevels(totalRot);
+
+  // Étape 3 : Reconstruire la liste EN RESPECTANT la structure rotation 3-3-3
+  // La liste est déjà organisée par rotation : [S S S B B B K K K] [S S S B B B K K K]...
+  // On détecte la taille d'un bloc rotation
+  var perSBKBlock = 0;
+  if (list.length > 0) {
+    var firstG = list[0].g;
+    var idx = 0;
+    // Compter les titres de la première rotation jusqu'au changement de cycle
+    // On utilise le fait que la liste alterne S...B...K... par rotation
+    var genres = [];
+    list.forEach(function(item) { if(item.g !== 'KO') genres.push(item.g); });
+    // Détecter la longueur d'un bloc SBK
+    if (sbkRot > 0) perSBKBlock = Math.floor(genres.length / sbkRot);
+  }
+
+  var sorted = [];
+
+  // Traiter chaque rotation SBK
+  for (var r = 0; r < sbkRot; r++) {
+    // Extraire les titres de cette rotation
+    var rotStart = r * perSBKBlock;
+    var rotItems = list.slice(rotStart, rotStart + perSBKBlock);
+
+    // Séparer par genre dans cette rotation
+    var byGenre = { S: [], B: [], K: [] };
+    rotItems.forEach(function(item) {
+      if (byGenre[item.g]) byGenre[item.g].push(item);
+    });
+
+    // Niveau d'énergie de cette rotation
+    var level = levels[r]; // 0 = calme, 1 = peak
+
+    // Trier chaque genre par BPM selon le niveau d'énergie puis optimiser par Camelot
+    ['S', 'B', 'K'].forEach(function(g) {
+      // 1. Tri BPM selon énergie
+      byGenre[g].sort(function(a, b) {
+        if (!a.bpm) return 1;
+        if (!b.bpm) return -1;
+        return level >= 0.5 ? b.bpm - a.bpm : a.bpm - b.bpm;
+      });
+      // 2. Réordonner par Camelot (en conservant l'ordre BPM comme base)
+      byGenre[g] = reorderByCamelot(byGenre[g]);
+    });
+
+    // Reconstruire la rotation en respectant l'ordre S → B → K
+    ['S', 'B', 'K'].forEach(function(g) {
+      byGenre[g].forEach(function(item) { sorted.push(item); });
+    });
+  }
+
+  // Traiter les rotations Konpa
+  var koItems = list.filter(function(i){ return i.g === 'KO'; });
+  for (var r = 0; r < koRot; r++) {
+    var level = levels[sbkRot + r];
+    var rotKo = koItems.slice(r * Math.ceil(koItems.length / koRot),
+                              (r+1) * Math.ceil(koItems.length / koRot));
+    rotKo.sort(function(a, b) {
+      if (!a.bpm) return 1;
+      if (!b.bpm) return -1;
+      return level >= 0.5 ? b.bpm - a.bpm : a.bpm - b.bpm;
+    });
+    rotKo.forEach(function(item) { sorted.push(item); });
+  }
+
+  return sorted;
+}
+
+async function generatePlaylist() {
+  if (!await ensureToken()) return;
+  var btn=document.getElementById('gen-btn'); btn.disabled=true;
+  var name=document.getElementById('playlist-name').value||'ANWA SBK';
+  var duree=parseInt(document.getElementById('duree').value);
+  var eraYear=parseInt(document.getElementById('era-year').value);
+  var nbS=parseInt(document.getElementById('nb-s').value)||0,clS=parseInt(document.getElementById('cl-s').value)||0,reS=parseInt(document.getElementById('re-s').value)||0;
+  var nbB=parseInt(document.getElementById('nb-b').value)||0,clB=parseInt(document.getElementById('cl-b').value)||0,reB=parseInt(document.getElementById('re-b').value)||0;
+  var nbK=parseInt(document.getElementById('nb-k').value)||0,clK=parseInt(document.getElementById('cl-k').value)||0,reK=parseInt(document.getElementById('re-k').value)||0;
+  var nbKo=parseInt(document.getElementById('nb-ko').value)||3,clKo=parseInt(document.getElementById('cl-ko').value)||0,reKo=parseInt(document.getElementById('re-ko').value)||0;
+  var startMin=timeToMinutes(document.getElementById('time-start').value);
+  var konpaMin=timeToMinutes(document.getElementById('time-konpa').value);
+  var off=konpaMin-startMin; if(off<0)off+=1440;
+  var perSBK=nbS+nbB+nbK||1, sbkRot=perSBK>0?Math.floor(off/(perSBK*4)):0, sbkDur=sbkRot*perSBK*4;
+  var koRot=Math.ceil((duree*60-sbkDur)/(nbKo*4));
+  var idS=extractId(document.getElementById('src-s').value);
+  var idB=extractId(document.getElementById('src-b').value);
+  var idK=extractId(document.getElementById('src-k').value);
+  var idKo=extractId(document.getElementById('src-ko').value);
+
+  document.getElementById('progress-section').style.display='block';
+  document.getElementById('result-section').style.display='none';
+  document.getElementById('progress-log').innerHTML='';
+  document.getElementById('tracks-preview').innerHTML='';
+  setProgress(0);
+
+  try {
+    log('🎵 Chargement Salsa…','info');
+  log('🔑 Token: ' + accessToken.substring(0,20) + '…','info');
+  var sAll=await loadPlaylist(idS);
+    var sC=shuffle(sAll.filter(function(t){return t.year<eraYear;})),sR=shuffle(sAll.filter(function(t){return t.year>=eraYear;}));
+    log('✓ Salsa : '+sC.length+' classiques / '+sR.length+' récents','ok'); setProgress(10);
+
+    log('🎵 Chargement Bachata…','info'); var bAll=await loadPlaylist(idB);
+    var bC=shuffle(bAll.filter(function(t){return t.year<eraYear;})),bR=shuffle(bAll.filter(function(t){return t.year>=eraYear;}));
+    log('✓ Bachata : '+bC.length+' classiques / '+bR.length+' récents','ok'); setProgress(20);
+
+    log('🎵 Chargement Kizomba…','info'); var kAll=await loadPlaylist(idK);
+    var kC=shuffle(kAll.filter(function(t){return t.year<eraYear;})),kR=shuffle(kAll.filter(function(t){return t.year>=eraYear;}));
+    log('✓ Kizomba : '+kC.length+' classiques / '+kR.length+' récents','ok'); setProgress(30);
+
+    log('🎺 Chargement Konpa…','ko'); var koAll=await loadPlaylist(idKo);
+    var koC=shuffle(koAll.filter(function(t){return t.year<eraYear;})),koR=shuffle(koAll.filter(function(t){return t.year>=eraYear;}));
+    log('✓ Konpa : '+koC.length+' classiques / '+koR.length+' récents','ok'); setProgress(40);
+
+    var list=[];
+    for(var r=0;r<sbkRot;r++){
+      if(nbS>0){ for(var i=0;i<clS;i++) list.push({g:'S',track:sC[(r*clS+i)%(sC.length||1)]}); }
+      if(nbS>0){ for(var i=0;i<reS;i++) list.push({g:'S',track:sR[(r*reS+i)%(sR.length||1)]}); }
+      if(nbB>0){ for(var i=0;i<clB;i++) list.push({g:'B',track:bC[(r*clB+i)%(bC.length||1)]}); }
+      if(nbB>0){ for(var i=0;i<reB;i++) list.push({g:'B',track:bR[(r*reB+i)%(bR.length||1)]}); }
+      if(nbK>0){ for(var i=0;i<clK;i++) list.push({g:'K',track:kC[(r*clK+i)%(kC.length||1)]}); }
+      if(nbK>0){ for(var i=0;i<reK;i++) list.push({g:'K',track:kR[(r*reK+i)%(kR.length||1)]}); }
+    }
+    for(var r=0;r<koRot;r++){
+      for(var i=0;i<clKo;i++) list.push({g:'KO',track:koC[(r*clKo+i)%(koC.length||1)]});
+      for(var i=0;i<reKo;i++) list.push({g:'KO',track:koR[(r*reKo+i)%(koR.length||1)]});
+    }
+
+    if (list.length === 0) {
+      log('❌ Aucun titre chargé — token expiré ? Cliquez sur Renouveler en haut de la page.', 'error');
+      updateTokenStatus('error', '⚠️ Token expiré — cliquez Renouveler');
+      return;
+    }
+    log('📋 '+list.length+' titres · '+sbkRot+' rotations SBK + '+koRot+' rotations Konpa','info');
+
+    // Récupérer les BPM
+    log('🎵 Récupération des BPM via Songstats…','info');
+    var uris = list.filter(function(i){return i.track;}).map(function(i){return i.track.uri;});
+    var bpmData = await fetchBPMs(uris, list);
+    var bpmCount = Object.values(bpmData).filter(function(d){return d.bpm;}).length;
+    log('✓ BPM récupérés : '+bpmCount+'/'+uris.length+' titres','ok');
+
+    // Dédupliquer les titres
+    var seenUris = {};
+    list = list.filter(function(item) {
+      if (!item.track) return false;
+      var uri = item.track.uri;
+      if (seenUris[uri]) return false;
+      seenUris[uri] = true;
+      return true;
+    });
+    log('✓ Doublons supprimés : ' + list.length + ' titres uniques', 'ok');
+
+    // Trier par BPM
+    list = sortByBPM(list, bpmData, sbkRot, koRot);
+    log('✓ Playlist triée par BPM progressif (Kizomba → Bachata → Salsa → Konpa)','ok');
+
+    // Afficher le preview des titres
+    var uris=[];
+    list.forEach(function(item,idx){
+      if(item.track){
+        uris.push(item.track.uri);
+        var tm=((startMin+idx*4)%1440+1440)%1440;
+        var h=Math.floor(tm/60)%24,mn=tm%60;
+        var timeStr=(h<10?'0':'')+h+'h'+(mn<10?'0':'')+mn;
+        var bpmStr=item.bpm?Math.round(item.bpm)+' BPM':'⚠️';
+        var camelotStr=item.camelot||'';
+        addTrackPreview(item.g,item.track.name,item.track.artist,item.track.year,eraYear,timeStr,bpmStr,camelotStr);
+      }
+    });
+
+    // Vérifier les titres sans BPM AVANT de créer la playlist principale
+    var missingItems = list.filter(function(i){ return i.track && i.bpmFallback; });
+    if (missingItems.length > 0) {
+      log('⚠️ '+missingItems.length+' titre(s) sans BPM — création playlist temporaire...','warn');
+      var mp = document.getElementById('missing-panel');
+      var mc = document.getElementById('missing-count');
+      var fb = document.getElementById('finalize-btn');
+      if (mp) mp.style.display = 'block';
+      if (mc) mc.textContent = missingItems.length;
+      if (fb) fb.style.display = 'inline-flex';
+      window._lastList = list;
+      window._lastName = name;
+      window._lastSbkRot = sbkRot;
+      window._lastKoRot = koRot;
+      // Sauvegarder dans localStorage pour survie après retour d'onglet
+      localStorage.setItem('anwa_pending_list', JSON.stringify(list));
+      localStorage.setItem('anwa_pending_name', name);
+      localStorage.setItem('anwa_pending_sbkRot', sbkRot);
+      localStorage.setItem('anwa_pending_koRot', koRot);
+      await createTempBPMPlaylist(missingItems);
+      log('📋 Renseigne les BPM manquants dans Admin BPM puis clique Finaliser','info');
+      btn.disabled=false;
+      return; // Stop — on attend la finalisation
+    }
+
+    // Tous les BPM sont disponibles → créer la playlist directement
+    log('🔨 Création de la playlist…','info');
+    var writeToken = await getReadToken() || accessToken;
+    var cr=await fetch('https://api.spotify.com/v1/me/playlists',{method:'POST',headers:{Authorization:'Bearer '+writeToken,'Content-Type':'application/json'},body:JSON.stringify({name:name,description:'Playlist ANWA DJ — '+new Date().toLocaleDateString('fr-FR'),public:true})});
+    var pl=await cr.json();
+    if(!pl.id){log('❌ Erreur création : '+JSON.stringify(pl),'err');btn.disabled=false;return;}
+    log('✓ Playlist "'+name+'" créée','ok'); setProgress(50);
+
+    setProgress(80);
+    for(var i=0;i<uris.length;i+=100){
+      var r=await fetch('https://api.spotify.com/v1/playlists/'+pl.id+'/items',{method:'POST',headers:{Authorization:'Bearer '+writeToken,'Content-Type':'application/json'},body:JSON.stringify({uris:uris.slice(i,i+100)})});
+      var d=await r.json();
+      if(d.error) log('❌ '+d.error.message,'err');
+    }
+
+    setProgress(100);
+    log('🎉 '+uris.length+' titres ajoutés !','ok');
+    document.getElementById('result-section').style.display='block';
+    document.getElementById('result-desc').textContent=uris.length+' titres · SBK jusqu\'à '+minutesToTime(startMin+sbkDur)+' · Konpa ensuite · ~'+duree+'h';
+    document.getElementById('result-link').href=pl.external_urls?pl.external_urls.spotify:'#';
+    btn.disabled=false;
+  } catch(e) { log('❌ Erreur : '+e.message,'err'); btn.disabled=false; }
+}
+
+document.getElementById('connect-btn').addEventListener('click', connectSpotify);
+
+// Recherche playlist
+document.getElementById('search-go-btn').addEventListener('click', function() { doSearch(false); });
+
+// Event delegation pour les boutons Choisir dans les résultats
+document.getElementById('search-results').addEventListener('click', function(e) {
+  var btn = e.target.closest('.playlist-select-btn');
+  if (btn) {
+    selectPlaylist(btn.getAttribute('data-id'), btn.getAttribute('data-name'));
+  }
+});
+document.getElementById('search-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') doSearch(false);
+});
+document.getElementById('search-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeSearch();
+});
+
+// Sauvegarder quand on colle/tape manuellement dans les champs sources
+['s','b','k','ko'].forEach(function(g) {
+  document.getElementById('src-' + g).addEventListener('change', function() {
+    saveSources();
+    document.getElementById('sel-' + g).textContent = '';
+  });
+});
+document.getElementById('gen-btn').addEventListener('click', generatePlaylist);
+
+// Redessiner la courbe quand les paramètres changent
+['duree','nb-s','nb-b','nb-k','nb-ko','time-start','time-konpa'].forEach(function(id) {
+  var el = document.getElementById(id);
+  if (el) el.addEventListener('change', drawEnergyCurve);
+});
+
+window.addEventListener('load', async function() {
+  var params=new URLSearchParams(window.location.search);
+  var code=params.get('code');
+  if(code){ window.history.replaceState({},document.title,window.location.pathname); await exchangeCode(code); return; }
+  var token=localStorage.getItem('spotify_token');
+  var exp=parseInt(localStorage.getItem('spotify_exp')||'0');
+  if(token && Date.now()<exp-60000){ accessToken=token; await loadUser(); return; }
+  if(localStorage.getItem('spotify_refresh')){ var ok=await doRefresh(); if(ok){await loadUser();return;} }
+  showConnect();
+});
+</script>
+</body>
+</html>
