@@ -169,6 +169,7 @@ function callClaude($api_key, $model, $system, $message) {
     $payload = [
         'model'      => $model,
         'max_tokens' => 2000,
+        'cache_control' => ['type' => 'ephemeral'],
         'system'     => $system,
         'tools'      => [['type' => 'web_search_20250305', 'name' => 'web_search']],
         'messages'   => [['role' => 'user', 'content' => $message]],
