@@ -249,7 +249,7 @@ function resolveGenreLabel($genre) {
 $claude_response = callClaude($CLAUDE_API_KEY, $CLAUDE_MODEL, $system_prompt, $user_message);
 
 if (!$claude_response || empty($claude_response['content'])) {
-    echo json_encode(['error' => 'Erreur API Claude', 'detail' => $claude_response]); exit;
+    echo json_encode(['error' => 'Erreur API Claude', 'detail' => $claude_response, 'key_check' => !empty($CLAUDE_API_KEY)]); exit;
 }
 
 $parsed = extractJson($claude_response['content']);
