@@ -22,7 +22,7 @@ set_time_limit(120);
 // ── Config ────────────────────────────────────────────────────────────────────
 require_once __DIR__ . '/config.php';
 $CLAUDE_API_KEY  = CLAUDE_API_KEY;
-$CLAUDE_MODEL    = 'claude-sonnet-4-20250514';
+$CLAUDE_MODEL    = 'claude-sonnet-4-6';
 $DATA_DIR        = __DIR__ . '/data';
 $HISTORY_FILE    = $DATA_DIR . '/agent_history.json';
 $PERMANENTS_FILE = $DATA_DIR . '/agent_permanents.json';
