@@ -317,9 +317,20 @@ $history[$genre]  = array_values(array_filter($history[$genre], fn($e) => $e['pl
 file_put_contents($HISTORY_FILE, json_encode($history, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
 // ── Mise à jour permanents ────────────────────────────────────────────────────
+// Sauvegarder les permanents résolus via Spotify
+foreach ($perm_results as $p) {
+    $already = array_filter($permanents[$genre] ?? [], fn($x) => strtolower($x['title']) === strtolower($p['name']));
+    if (empty($already)) {
+        $permanents[$genre][] = ['title' => $p['name'], 'artists' => $p['artist'], 'uri' => $p['uri'], 'added_at' => date('Y-m-d')];
+    }
+}
+// Promotions suggérées par Claude
 foreach ($parsed['promoted_to_permanent'] ?? [] as $np) {
     $parts = explode(' - ', $np, 2);
-    $permanents[$genre][] = ['title' => $parts[0] ?? $np, 'artists' => $parts[1] ?? '', 'added_at' => date('Y-m-d')];
+    $already = array_filter($permanents[$genre] ?? [], fn($x) => strtolower($x['title']) === strtolower(trim($parts[0])));
+    if (empty($already)) {
+        $permanents[$genre][] = ['title' => $parts[0] ?? $np, 'artists' => $parts[1] ?? '', 'added_at' => date('Y-m-d')];
+    }
 }
 foreach ($parsed['retired_permanents'] ?? [] as $rp) {
     $permanents[$genre] = array_filter($permanents[$genre], fn($p) => strtolower($p['title']) !== strtolower(explode(' - ', $rp)[0]));
