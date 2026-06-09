@@ -1,4 +1,6 @@
 <?php
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 /**
  * ANWA DJ — Claude Agent
  * Génère une sélection de titres pour un genre donné via Claude API + web search
