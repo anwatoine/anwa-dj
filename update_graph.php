@@ -19,9 +19,9 @@ header('Access-Control-Allow-Origin: *');
 set_time_limit(120);
 
 // ── Config ────────────────────────────────────────────────────────────────────
-$DATA_DIR    = __DIR__ . '/data';
+$DATA_DIR    = '/home/u343863374/dj_data';
 $GRAPH_FILE  = $DATA_DIR . '/artist_graphs.json';
-$TOKEN_FILE  = __DIR__ . '/spotify_token.json';
+$TOKEN_FILE  = '/home/u343863374/domains/anwadance.com/public_html/dj/spotify_token.json';
 
 if (!is_dir($DATA_DIR)) mkdir($DATA_DIR, 0755, true);
 

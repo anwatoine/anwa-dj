@@ -19,7 +19,7 @@ ini_set('max_execution_time', 120);
 // Limiter à 20 IDs par appel pour éviter les timeouts
 $spotify_ids = array_slice($spotify_ids, 0, 20);
 
-$data_dir = __DIR__ . '/data';
+$data_dir = '/home/u343863374/dj_data';
 if (!is_dir($data_dir)) mkdir($data_dir, 0755, true);
 $manual_file  = $data_dir . '/bpm_manual.json';
 $cache_file   = $data_dir . '/bpm_cache.json';

@@ -20,10 +20,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(200); exit; }
 set_time_limit(120);
 
 // ── Config ────────────────────────────────────────────────────────────────────
-require_once __DIR__ . '/config.php';
+require_once '/home/u343863374/config_dj.php';
 $CLAUDE_API_KEY  = CLAUDE_API_KEY;
 $CLAUDE_MODEL    = 'claude-sonnet-4-6';
-$DATA_DIR        = __DIR__ . '/data';
+$DATA_DIR        = '/home/u343863374/dj_data';
 $HISTORY_FILE    = $DATA_DIR . '/agent_history.json';
 $PERMANENTS_FILE = $DATA_DIR . '/agent_permanents.json';
 
