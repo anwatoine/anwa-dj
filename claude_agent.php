@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(200); exit; }
 set_time_limit(120);
 
 // ── Config ────────────────────────────────────────────────────────────────────
-$CLAUDE_API_KEY  = 'VOTRE_CLE_API_CLAUDE'; // À remplacer
+$CLAUDE_API_KEY  = getenv('CLAUDE_API_KEY');
 $CLAUDE_MODEL    = 'claude-sonnet-4-20250514';
 $DATA_DIR        = __DIR__ . '/data';
 $HISTORY_FILE    = $DATA_DIR . '/agent_history.json';
